@@ -216,11 +216,11 @@ Oracle OS is a governed fractal memory architecture designed for agentic cogniti
 - **Safety:** Protected sources ✓, no UI changes ✓, no DB changes ✓, no current.md writes ✓, no shell-promoter activation ✓
 - **Evidence:** docs/PHASE_2_STAGE_G_EVAL_REPORT.md (all 10 categories passed)
 
-#### Stage H: Current.md Completion Checkpoint (FUTURE)
+#### Stage H: Current.md Completion Checkpoint (EXTERNAL CHECKPOINT — COMPLETE)
 - **What:** Migrate Phase 2 completion state into current.md 16D sub-shell (role: decisions)
 - **Why:** Close the loop by recording Phase 2 as consolidated decision state, not just code artifacts
 - **Governance:** Local consolidation rules apply; Phase 2 becomes a local anchor in decisions role
-- **Status:** DEFERRED — requires explicit authorization and scoping before proceeding
+- **Status:** COMPLETE as external validation layer (separate from repo-based Stages A–G)
 
 ### 3.3 Out-of-Sequence Module: Shell-Promoter (KEEP_DEFERRED)
 

@@ -92,7 +92,7 @@ git status --short                                       # Clean (see below)
 
 ### No Current.md or Shell-Promoter Activation
 - `current.md` not written ✅
-- `ui/lib/oracle/shell-promoter.ts` does not exist (deferred pending results) ✅
+- `shell-promoter` (commit 0448d69) exists but remains KEEP_DEFERRED — not active, not integrated, not authorized for use ✅
 - Stage H not begun ✅
 
 ### No Stage H Authorization Granted
