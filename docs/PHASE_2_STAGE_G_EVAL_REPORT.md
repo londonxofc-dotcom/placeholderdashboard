@@ -97,7 +97,8 @@ git status --short                                       # Clean (see below)
 
 ### No Stage H Authorization Granted
 - This report does not authorize Stage H
-- User must explicitly approve Stage H before proceeding
+
+**Historical note:** This statement was true at the time of the Stage G eval report. It has since been superseded by the completed Stage H external current.md checkpoint. Current canon: Stage H is COMPLETE as an external memory checkpoint, not future work and not deferred.
 
 ---
 
@@ -238,16 +239,25 @@ All six modules work together as a cohesive system.
 
 ## Stage H Readiness
 
-**Can Stage H begin?** ❌ **NOT YET**
+**Can Stage H begin?** ✅ **HISTORICALLY SUPERSEDED**
 
-This report confirms Stage G is **passing**. However, Stage H authorization requires **explicit user approval**. Do not begin Stage H until the user explicitly authorizes it.
+At the time of this Stage G eval report, Stage H had not yet been completed. This is now superseded by the later external current.md checkpoint.
+
+Current canon:
+- Stage H is COMPLETE as an external memory checkpoint.
+- Stage H is not repo implementation work.
+- Stage H is not future work.
+- Stage H is not deferred.
+- Stage H is not waiting for authorization.
+- Phase 3 remains future / unauthorized.
+- shell-promoter / 0448d69 activation remains future / unauthorized.
 
 ---
 
 ## Recommended Next Step
 
 1. ✅ **Stage G eval is complete and passing**
-2. ⏸️ **Wait for explicit user authorization before Stage H**
+2. ⏸️ **Stage H is now complete as an external current.md checkpoint. Wait for explicit user authorization before Phase 3 implementation, live DB/API wiring, typecheck/code repair, or shell-promoter / 0448d69 activation.**
 3. ❌ **Do not commit this report automatically — user will decide**
 
 ---
