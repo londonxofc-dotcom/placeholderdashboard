@@ -65,6 +65,44 @@
     z-index: 50; font-size: 10px; color: rgba(60, 180, 220, 0.4); line-height: 1.9;
   }
   .equation em { color: var(--cyan); font-style: normal; font-weight: 500; }
+
+  @media (max-width: 820px) {
+    .header {
+      height: auto;
+      min-height: 72px;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+    .view-switcher {
+      width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .metrics-panel {
+      width: 220px;
+      right: 12px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .metrics-panel {
+      width: calc(100vw - 24px);
+      right: 12px;
+      left: 12px;
+    }
+    .equation {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -75,10 +113,10 @@
     <span class="plate-label">Plate VII — Theory Space Navigator</span>
   </div>
   <div class="view-switcher">
-    <button class="view-btn active" onclick="setView('topo')">Topological</button>
-    <button class="view-btn" onclick="setView('heat')">Heat Map</button>
-    <button class="view-btn" onclick="setView('geodesic')">Geodesic</button>
-    <button class="view-btn" onclick="setView('cluster')">Clusters</button>
+    <button class="view-btn active" data-view="topo">Topological</button>
+    <button class="view-btn" data-view="heat">Heat Map</button>
+    <button class="view-btn" data-view="geodesic">Geodesic</button>
+    <button class="view-btn" data-view="cluster">Clusters</button>
   </div>
 </div>
 
@@ -103,8 +141,22 @@
 <script>
 const canvas = document.getElementById('main-canvas');
 const ctx = canvas.getContext('2d');
+const header = document.querySelector('.header');
+const metricsPanel = document.querySelector('.metrics-panel');
+const prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 let W, H, cx, cy, time = 0;
 let currentView = 'topo';
+let prefersReducedMotion = prefersReducedMotionQuery.matches;
+let perf = {
+  dprCap: 2,
+  fieldRes: 8,
+  fieldResHeat: 4,
+  contourRes: 4,
+  contourTolerance: 0.012,
+  edgeStride: 1,
+  metricInterval: 90,
+  drawHeavyEvery: 1
+};
 
 // Theory points on the manifold
 const theories = [];
@@ -155,17 +207,61 @@ function initTheories() {
 function setView(v) {
   currentView = v;
   document.querySelectorAll('.view-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.toLowerCase().includes(v));
+    b.classList.toggle('active', b.dataset.view === v);
   });
 }
 
+function updatePerfProfile() {
+  const compact = window.innerWidth <= 900;
+  perf = prefersReducedMotion
+    ? {
+        dprCap: 1.25,
+        fieldRes: 14,
+        fieldResHeat: 10,
+        contourRes: 8,
+        contourTolerance: 0.018,
+        edgeStride: 3,
+        metricInterval: 150,
+        drawHeavyEvery: 2
+      }
+    : compact
+      ? {
+          dprCap: 1.5,
+          fieldRes: 10,
+          fieldResHeat: 6,
+          contourRes: 5,
+          contourTolerance: 0.014,
+          edgeStride: 2,
+          metricInterval: 110,
+          drawHeavyEvery: 1
+        }
+      : {
+          dprCap: 2,
+          fieldRes: 8,
+          fieldResHeat: 4,
+          contourRes: 4,
+          contourTolerance: 0.012,
+          edgeStride: 1,
+          metricInterval: 90,
+          drawHeavyEvery: 1
+        };
+}
+
 function resize() {
-  const dpr = window.devicePixelRatio || 1;
-  W = window.innerWidth; H = window.innerHeight - 44;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  updatePerfProfile();
+  const dpr = Math.min(window.devicePixelRatio || 1, perf.dprCap);
+  const headerHeight = Math.ceil(header.getBoundingClientRect().height || 44);
+  W = window.innerWidth;
+  H = Math.max(180, window.innerHeight - headerHeight);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.top = headerHeight + 'px';
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  metricsPanel.style.top = `${headerHeight + 20}px`;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  cx = W / 2; cy = H / 2;
+  cx = W / 2;
+  cy = H / 2;
 }
 
 // Manifold curvature field
@@ -180,7 +276,7 @@ function curvature(px, py) {
 }
 
 function drawManifoldField() {
-  const res = currentView === 'heat' ? 4 : 8;
+  const res = currentView === 'heat' ? perf.fieldResHeat : perf.fieldRes;
   for (let px = 0; px < W; px += res) {
     for (let py = 0; py < H; py += res) {
       const nx = px / W, ny = py / H;
@@ -209,8 +305,8 @@ function drawManifoldField() {
 
 // Contour lines on the manifold
 function drawContours() {
-  if (currentView === 'heat') return;
-  const res = 4;
+  if (currentView === 'heat' || prefersReducedMotion) return;
+  const res = perf.contourRes;
   const levels = [0.1, 0.2, 0.3, 0.45, 0.6];
 
   for (const level of levels) {
@@ -223,7 +319,7 @@ function drawContours() {
     for (let px = 0; px < W; px += res) {
       for (let py = 0; py < H; py += res) {
         const k = curvature(px / W, py / H);
-        if (Math.abs(k - level) < 0.012) {
+        if (Math.abs(k - level) < perf.contourTolerance) {
           ctx.fillRect(px, py, 1, 1);
         }
       }
@@ -414,14 +510,15 @@ function drawTheories() {
     ];
     const c = colors[t.cluster];
 
-    // Glow
-    const grd = ctx.createRadialGradient(px, py, 0, px, py, t.size * 3);
-    grd.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${0.2 * pulse})`);
-    grd.addColorStop(1, `rgba(${c.r}, ${c.g}, ${c.b}, 0)`);
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.arc(px, py, t.size * 3, 0, Math.PI * 2);
-    ctx.fill();
+    if (!prefersReducedMotion) {
+      const grd = ctx.createRadialGradient(px, py, 0, px, py, t.size * 3);
+      grd.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, ${0.2 * pulse})`);
+      grd.addColorStop(1, `rgba(${c.r}, ${c.g}, ${c.b}, 0)`);
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(px, py, t.size * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Dot
     ctx.fillStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${0.5 + pulse * 0.4})`;
@@ -433,7 +530,7 @@ function drawTheories() {
 
 // Metrics fluctuation
 function updateMetrics() {
-  if (time % 90 !== 0) return;
+  if (time % perf.metricInterval !== 0) return;
   const k = 0.35 + Math.random() * 0.15;
   const d = 1.1 + Math.random() * 0.4;
   const c = 0.75 + Math.random() * 0.15;
@@ -448,13 +545,18 @@ function updateMetrics() {
 }
 
 function render() {
+  if (document.hidden) {
+    requestAnimationFrame(render);
+    return;
+  }
   time++;
   ctx.clearRect(0, 0, W, H);
 
+  const drawHeavy = perf.drawHeavyEvery === 1 || time % perf.drawHeavyEvery === 0;
   drawManifoldField();
-  drawContours();
+  if (drawHeavy) drawContours();
   drawClusters();
-  drawGeodesics();
+  if (drawHeavy) drawGeodesics();
   drawRegions();
   drawTheories();
   updateMetrics();
@@ -463,6 +565,20 @@ function render() {
 }
 
 window.addEventListener('resize', resize);
+if (prefersReducedMotionQuery.addEventListener) {
+  prefersReducedMotionQuery.addEventListener('change', (event) => {
+    prefersReducedMotion = event.matches;
+    resize();
+  });
+} else if (prefersReducedMotionQuery.addListener) {
+  prefersReducedMotionQuery.addListener((event) => {
+    prefersReducedMotion = event.matches;
+    resize();
+  });
+}
+document.querySelectorAll('.view-btn').forEach((button) => {
+  button.addEventListener('click', () => setView(button.dataset.view));
+});
 resize();
 initTheories();
 render();

@@ -173,6 +173,60 @@
     pointer-events: none;
     z-index: 5;
   }
+
+  @media (max-width: 980px) {
+    .stack-container {
+      padding: 64px 12px 20px;
+      max-width: none;
+    }
+    .layer {
+      grid-template-columns: 44px minmax(0, 1fr);
+    }
+    .layer-num {
+      padding: 12px 0;
+      font-size: 18px;
+    }
+    .layer-body {
+      padding: 12px 12px;
+      border-right: none;
+    }
+    .layer-io {
+      grid-column: 2;
+      border-top: 1px solid var(--border);
+      padding: 10px 12px;
+      gap: 8px 12px;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .layer-desc {
+      font-size: 11px;
+      line-height: 1.5;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .layer {
+      grid-template-columns: 38px minmax(0, 1fr);
+    }
+    .layer-name {
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .io-item {
+      font-size: 7px;
+      letter-spacing: 0.7px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
+    #flow-canvas {
+      display: none;
+    }
+  }
 </style>
 </head>
 <body>
@@ -192,7 +246,6 @@
   <div class="layer" style="background: rgba(155, 89, 182, 0.04); border: 1px solid rgba(155, 89, 182, 0.1);">
     <div class="layer-num" style="color: rgba(155, 89, 182, 0.4);">8</div>
     <div class="layer-body">
-      <div class="layer-body" style="padding: 0;"></div>
       <div class="layer-name" style="color: var(--purple);">Oracle Meta-Cognition</div>
       <div class="layer-desc">Cognition about cognition. Monitors reasoning quality, detects blind spots, triggers self-correction. The layer that knows what it doesn't know.</div>
       <div class="layer-activity" style="background: var(--purple);"></div>
@@ -320,10 +373,16 @@
 // Animated flow particles along the left side
 const flowCanvas = document.getElementById('flow-canvas');
 const fCtx = flowCanvas.getContext('2d');
+const prefersReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+let prefersReducedMotion = prefersReducedMotionQuery.matches;
 let time = 0;
+let flowRunning = false;
+let flowScale = 1;
 
 function resizeFlow() {
-  const dpr = window.devicePixelRatio || 1;
+  const dprCap = prefersReducedMotion ? 1.1 : 1.6;
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+  flowScale = dpr;
   flowCanvas.width = window.innerWidth * dpr;
   flowCanvas.height = (window.innerHeight - 44) * dpr;
   flowCanvas.style.width = window.innerWidth + 'px';
@@ -384,9 +443,13 @@ const topY = 40;
 const bottomY = window.innerHeight - 80;
 
 function renderFlow() {
+  if (!flowRunning || document.hidden) {
+    if (flowRunning) requestAnimationFrame(renderFlow);
+    return;
+  }
   time++;
-  const w = flowCanvas.width / (window.devicePixelRatio || 1);
-  const h = flowCanvas.height / (window.devicePixelRatio || 1);
+  const w = flowCanvas.width / flowScale;
+  const h = flowCanvas.height / flowScale;
   fCtx.clearRect(0, 0, w, h);
 
   // Spawn down particles (constraints)
@@ -440,9 +503,33 @@ function renderFlow() {
   requestAnimationFrame(renderFlow);
 }
 
+function setFlowMode(enabled) {
+  flowRunning = enabled;
+  if (!enabled) {
+    const w = flowCanvas.width / flowScale;
+    const h = flowCanvas.height / flowScale;
+    fCtx.clearRect(0, 0, w, h);
+    return;
+  }
+  requestAnimationFrame(renderFlow);
+}
+
 window.addEventListener('resize', resizeFlow);
+if (prefersReducedMotionQuery.addEventListener) {
+  prefersReducedMotionQuery.addEventListener('change', (event) => {
+    prefersReducedMotion = event.matches;
+    resizeFlow();
+    setFlowMode(!prefersReducedMotion);
+  });
+} else if (prefersReducedMotionQuery.addListener) {
+  prefersReducedMotionQuery.addListener((event) => {
+    prefersReducedMotion = event.matches;
+    resizeFlow();
+    setFlowMode(!prefersReducedMotion);
+  });
+}
 resizeFlow();
-renderFlow();
+setFlowMode(!prefersReducedMotion);
 </script>
 </body>
 </html>
