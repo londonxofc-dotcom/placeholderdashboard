@@ -70,9 +70,17 @@ export interface BehavioralPattern {
 }
 
 export interface CycleWindow {
+  period: number
   scale: SignalScale
-  strength: number
-  alignmentWithObjective: number
+  confidence: number
+  lastObserved: string
+}
+
+export interface CycleAlignment {
+  isAligned: boolean
+  alignmentScore: number
+  matchingCycle: CycleWindow | null
+  phaseAlignment: number
 }
 
 export interface PredictabilityInput {
