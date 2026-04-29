@@ -475,16 +475,23 @@ Before any of the following gates, explicit authorization is required.
 
 ---
 
-### Gate G: Autonomous Activation (Not authorized, requires special decision)
+### Gate G: Human-Approved Forecast Surface (Not authorized, requires special decision)
 **Status:** Not yet authorized
 
 **Prerequisite:** Gates A–F all approved and 30+ days of audit trail with zero safety incidents
 
-**What it is:** System can suggest forecasts without requiring explicit user approval first.
+**What it is:** Forecasts are displayed to users in a controlled, advisory context with full provenance, confidence, assumptions, uncertainty, and failure modes exposed.
 
-**What it unlocks:** Forecast is surfaced in UI proactively.
+**What it unlocks:** Controlled forecast display for decision support (not autonomous action, not canon updates, not certainty claims).
 
-**Scope:** Modify Oracle UI to show forecast suggestions (not decisions) with confidence bands and failure modes clearly displayed.
+**Scope:** Modify Oracle UI to show forecasts with confidence bands, lineage, failure modes, and explicit user acknowledgment required before any downstream action.
+
+**Explicit Non-Authorization:** Gate G does NOT authorize:
+- Autonomous action or outreach
+- Autonomous canon updates or predictions treated as decision law
+- Live prediction claims or certainty language
+- Bypassing provenance chains
+- Suppressing uncertainty, assumptions, or failure modes in user-facing displays
 
 **Note:** This gate requires explicit approval from Phase 3 leadership. Do not implement without written authorization.
 
@@ -519,10 +526,12 @@ Reason: The Predictability Kernel is currently pure and isolated. It has 67 pass
 - Editing `current.md`
 - Modifying protected sources (`~/.claude/oracle-memory/sources/`)
 - Activating shell-promoter
-- Making live prediction claims
+- Making live prediction claims or certainty language
 - Treating predictions as canonical Oracle decisions
-- Autonomous forecasting
+- Autonomous action, autonomous forecasting, or autonomous outreach
+- Autonomous canon updates
 - Bypassing provenance, confidence, or drift boundaries
+- Suppressing uncertainty, assumptions, or failure modes in user-facing displays
 
 **This specification ONLY:**
 
