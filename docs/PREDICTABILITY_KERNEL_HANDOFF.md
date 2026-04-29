@@ -14,16 +14,38 @@ This checkpoint is the **Predictability Kernel Stage P-A/P-B** — a local pure 
 
 ---
 
-## 2. Current Commits
+## 2. Stage P-C/P-D Status Update
 
-- **e33d8f6** — `docs(oracle): add mathematical critical thinking protocol`
-- **8b54bcb** — `feat(predictability): add historical cycle forecasting kernel`
+**Date:** 2026-04-29 16:47 UTC
 
-Both on branch `night-build/2026-04-25`.
+**Current Verified State:**
+- Branch: `night-build/2026-04-25`
+- Predictability test suite: **67/67 passing** (7 test files)
+- Build: **Clean** — Next.js compilation successful
+- Working tree: **Clean** — no API/UI/auth wiring
+- Auth experiment quarantined at: `/Users/Malachi/.claude/oracle-quarantine/ui-auth-2026-04-29_16-47-43/`
+- `current.md` untouched
+- Protected sources untouched
+- `shell-promoter` remains KEEP_DEFERRED
 
 ---
 
-## 3. What Was Added
+## 3. Current Predictability Modules
+
+**Complete and tested:**
+- `trend-delta.ts` — Delta classification, momentum scoring
+- `regime-shift.ts` — Landmark influence, regime detection
+- `behavioral-repetition.ts` — Pattern scoring
+- `predictability-kernel.ts` — Composite forecast (trend 35% + landmark 30% + behavioral 25% + cycle 10%)
+- `cycle-analysis.ts` — Cycle window detection and analysis
+- `trend-velocity.ts` — Velocity-based trend strength
+- `landmark-response.ts` — Landmark event response scoring
+
+All modules are pure deterministic functions. No external I/O. No database calls. No API integration.
+
+---
+
+## 4. What Was Added
 
 ### Documentation
 - **Section 2.5** added to `docs/ORACLE_WHITEPAPER_V0_1.md`
@@ -48,23 +70,31 @@ Both on branch `night-build/2026-04-25`.
 
 ---
 
-## 4. Test / Build Status
+## 5. Test / Build Status (Stage P-C/P-D)
 
-**Tests:** 24/24 passing
+**Tests:** 67/67 passing (expanded from initial 24 with cycle-analysis, trend-velocity, landmark-response)
 ```
-npm --prefix ui test -- predictability
+ ✓ lib/oracle/predictability/__tests__/trend-velocity.test.ts  (15 tests)
+ ✓ lib/oracle/predictability/__tests__/trend-delta.test.ts  (4 tests)
+ ✓ lib/oracle/predictability/__tests__/behavioral-repetition.test.ts  (6 tests)
+ ✓ lib/oracle/predictability/__tests__/regime-shift.test.ts  (4 tests)
+ ✓ lib/oracle/predictability/__tests__/cycle-analysis.test.ts  (10 tests)
+ ✓ lib/oracle/predictability/__tests__/predictability-kernel.test.ts  (10 tests)
+ ✓ lib/oracle/predictability/__tests__/landmark-response.test.ts  (18 tests)
 ```
 
 **Build:** TypeScript compilation clean, no errors, no warnings
 ```
-npm --prefix ui run build → ✓ Compiled successfully
+npm --prefix ui run build → ✓ Compiled successfully (15 routes, static prerendered)
 ```
 
 **Type Safety:** Strict mode, all exports typed, immutable patterns enforced.
 
+**Duration:** 24.84s (test setup + execution), 9 warnings in Next.js (CJS deprecation unrelated to predictability).
+
 ---
 
-## 5. Boundary Status
+## 6. Boundary Status (Stage P-C/P-D)
 
 ✓ **What was NOT done:**
 - No database schema added
@@ -84,19 +114,45 @@ npm --prefix ui run build → ✓ Compiled successfully
 
 ---
 
-## 6. Current Classification
+## 7. Current Classification
 
 **Local pure deterministic prediction kernel.**
 
-- Committed to repository.
-- Experimental but isolated.
-- Not integrated into Evidence Router.
-- Not live (no serving, no external input).
-- Awaiting Phase 3 integration gating review.
+- Committed to repository on `night-build/2026-04-25`.
+- Fixture/local-test driven (no live data consumption).
+- **Not integrated with Evidence Router.**
+- **Not wired to UI/API/DB.**
+- **Not connected to shell-promoter.**
+- **Predictions are not canon.**
+- Pure mathematical transformation layer: Evidence (if provided) → Forecast output.
+- Awaiting Evidence Router → Predictability adapter specification review.
 
 ---
 
-## 7. Future Integration Gates
+## 8. Cleanup / Quarantine Note
+
+**Branch hygiene completed 2026-04-29 16:47 UTC:**
+
+Unrelated UI/auth experiment was moved out of repository to preserve isolated Predictability work:
+```
+/Users/Malachi/.claude/oracle-quarantine/ui-auth-2026-04-29_16-47-43/
+├── ui/app/api/auth/
+│   ├── authorize/route.ts
+│   ├── callback/route.ts
+│   └── logout/route.ts
+├── ui/app/login/
+│   └── page.tsx
+├── ui/lib/auth/
+│   └── vercel-oauth.ts
+├── page.tsx.patch
+└── next-env.d.ts.patch
+```
+
+No auth/UI/API wiring remains in the working tree.
+
+---
+
+## 9. Future Integration Gates
 
 Before any of the following, explicit authorization required:
 
@@ -129,23 +185,42 @@ Before any of the following, explicit authorization required:
 
 ---
 
-## 8. Next Safe Options
+## 10. Next Required Gate
+
+**Before any more predictability module development:**
+
+Design the **Evidence Router ↔ Predictability adapter specification** — the bridge contract that allows the kernel to safely consume Evidence Router outputs.
+
+**Adapter scope (specification only, no implementation yet):**
+1. How does `EvidenceItem` / `PromptContextPacket` map to `PredictabilityInput`?
+2. How is provenance (T0–T5 source tier) preserved through the kernel?
+3. How does confidence calibration respect Evidence Router confidence labels?
+4. How are blocked/scaffold/unverified evidence items handled by the kernel?
+5. How does the kernel respond to divergent lens conclusions (escalation rules)?
+6. What is the output contract for predictions (structure, metadata, failure modes)?
+7. What controls prevent autonomous activation without explicit user authorization?
+
+**Document:** `docs/PREDICTABILITY_EVIDENCE_ROUTER_ADAPTER_SPEC.md` (design only)
+
+Do not implement adapter, module extensions, or UI wiring until this specification is complete and approved.
+
+---
+
+## 11. Next Safe Options
 
 **Option A** — Stop. Archive this work. Do not integrate.
 
 **Option B** — Manual code review. No integration yet. (Recommended for security/architecture audit.)
 
-**Option C** — Design integration plan only. No wiring yet.
+**Option C** — Design Evidence Router adapter specification only. No code yet. (Recommended next step.)
 
-**Option D** — Evidence Router bridge design. How does the kernel consume Evidence outputs while respecting provenance/confidence/drift boundaries? (Bridge design before wiring.)
+**Option D** — Manual predictability walkthrough. Trace a fixture through all 7 modules end-to-end.
 
-**Option E** — UI label design only. No backend wiring. (If visualization is needed before integration.)
-
-**Option F** — Create external `current.md` checkpoint only if explicitly authorized. (Do NOT edit `current.md` without approval.)
+**Option E** — Stop and wait for Phase 3 authorization decision.
 
 ---
 
-## 9. Freeze Line
+## 12. Freeze Line
 
 **This checkpoint does NOT authorize:**
 - Database schema mutations
@@ -162,16 +237,14 @@ Predictability Kernel is **speculative deterministic machinery** — useful for 
 
 ---
 
-## 10. Bridge Question for Next Phase
+## 13. Bridge Question for Next Phase
 
 > **How can the Predictability Kernel consume Phase 3 Evidence Router outputs without bypassing provenance, confidence, or drift boundaries?**
 
-This is the key question for integration design. Answer it before wiring.
+This is the key question for integration design. Answer it in the adapter specification before any wiring.
 
 ---
 
-**End of handoff.**
+**End of Stage P-C/P-D handoff update — 2026-04-29 16:47 UTC.**
 
-Next best task: **Integration gating review**, not more implementation.
-
-The bridge question above is the gateway.
+Next checkpoint: **Evidence Router ↔ Predictability adapter specification design** — no implementation, specification only.
