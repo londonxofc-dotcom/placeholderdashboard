@@ -60,7 +60,8 @@ curl http://localhost:8000/ready
 ```
 
 `/health` is a lightweight liveness probe. `/status` is a non-secret runtime
-snapshot for monitors and dashboards, including uptime and probe locations.
+snapshot for monitors and dashboards, including uptime and the `/health`,
+`/status`, and `/ready` probe locations.
 `/ready` checks deployment readiness
 and returns dependency status for the API router, database, and required
 Claude credential presence without exposing connection strings, secret values,

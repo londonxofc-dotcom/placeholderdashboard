@@ -83,6 +83,7 @@ async def status_check():
         "uptime_seconds": round((now - STARTED_AT).total_seconds(), 3),
         "probes": {
             "liveness": "/health",
+            "status": "/status",
             "readiness": "/ready",
         },
     }

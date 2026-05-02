@@ -16,6 +16,10 @@ The `/ready` response must never expose database URLs, API key values, raw
 exceptions, or connection strings. It should name only the failing dependency
 class, such as `database` or `anthropic_api_key`.
 
+The `/status` response should include the canonical probe paths for `/health`,
+`/status`, and `/ready` so monitors can discover the expected surfaces without
+hard-coding a stale contract.
+
 ## Pre-Launch Checklist
 
 Run these before pointing an uptime monitor at the backend:

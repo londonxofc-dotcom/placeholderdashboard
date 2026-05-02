@@ -72,6 +72,7 @@ async def test_status_reports_runtime_snapshot_without_dependency_checks():
     assert "started_at" in body
     assert body["probes"] == {
         "liveness": "/health",
+        "status": "/status",
         "readiness": "/ready",
     }
     connect.assert_not_called()
