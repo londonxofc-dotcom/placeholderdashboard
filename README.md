@@ -77,6 +77,16 @@ npm --prefix ui test
 
 When `npm --prefix ui run build` updates `ui/next-env.d.ts`, restore it before committing unless that file is intentionally in scope.
 
+Deployment preflight:
+
+```bash
+.venv/bin/python tools/deployment_preflight.py
+.venv/bin/python tools/deployment_env_check.py --production
+.venv/bin/python tools/deployment_probe_check.py --base-url http://localhost:8000
+```
+
+The environment check reports variable names and readiness only; it does not print secret values. The probe checker expects a backend base URL without `/api`.
+
 ## Operating Modes
 
 ### Batman
@@ -131,6 +141,7 @@ Task result memory writes route through `MemoryIsolationService` for `ExecutorAg
 ## Important Docs
 
 - [Operator Guide](docs/OPERATOR_GUIDE.md)
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Phase 4 Memory / ABAC Reconciliation](docs/PHASE_4_MEMORY_ABAC_RECONCILIATION.md)
 - [Resonance OS Integration Scope](docs/RESONANCE_OS_INTEGRATION_SCOPE.md)
