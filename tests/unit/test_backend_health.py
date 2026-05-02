@@ -54,6 +54,26 @@ def test_parse_allowed_origins_falls_back_when_only_wildcard():
     assert _parse_allowed_origins("*") == ["http://localhost:3000"]
 
 
+def test_parse_allowed_origins_ignores_malformed_origin_entries():
+    _get_app()
+    from backend.main import _parse_allowed_origins
+
+    assert _parse_allowed_origins(
+        "https://cockpit.example.com/path, "
+        "not-a-url, "
+        "https://admin.example.com"
+    ) == ["https://admin.example.com"]
+
+
+def test_parse_allowed_origins_falls_back_when_all_entries_are_malformed():
+    _get_app()
+    from backend.main import _parse_allowed_origins
+
+    assert _parse_allowed_origins(
+        "https://cockpit.example.com/path, not-a-url"
+    ) == ["http://localhost:3000"]
+
+
 async def test_health_reports_current_phase_without_dependency_checks():
     app = _get_app()
     transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]

@@ -152,8 +152,9 @@ rejects wildcard `ALLOWED_ORIGINS` in production mode. It also requires
 `NEXT_PUBLIC_API_URL` to be an HTTP(S) URL pointing at the backend API prefix
 ending in `/api`, not only the backend base URL.
 
-At runtime, wildcard CORS entries are ignored. If no exact origins remain, the
-backend falls back to local cockpit development origin `http://localhost:3000`.
+At runtime, wildcard or malformed CORS entries are ignored. If no exact
+HTTP(S) origins remain, the backend falls back to local cockpit development
+origin `http://localhost:3000`.
 
 Check that production target decisions have been filled in:
 

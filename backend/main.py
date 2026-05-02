@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from sqlalchemy import text
 
@@ -47,9 +48,23 @@ def _parse_allowed_origins(raw: str) -> list[str]:
     origins = [
         origin.strip()
         for origin in raw.split(",")
-        if origin.strip() and origin.strip() != "*"
+        if origin.strip()
+        and origin.strip() != "*"
+        and _is_exact_http_origin(origin.strip())
     ]
     return origins or ["http://localhost:3000"]
+
+
+def _is_exact_http_origin(value: str) -> bool:
+    parsed = urlparse(value)
+    return (
+        parsed.scheme in {"http", "https"}
+        and bool(parsed.netloc)
+        and parsed.path in {"", "/"}
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+    )
 
 # CORS middleware.
 # - allow_origins: explicit production-style origins from env (or default :3000).
