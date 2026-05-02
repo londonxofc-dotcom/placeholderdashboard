@@ -1,10 +1,10 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 4 reconciliation → integration wiring next
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅.
 **Active Worktrees:** none
-**Blockers:** none
-**Next Approval Gate:** Resonance OS integration scoping
+**Blockers:** Resonance OS source/surface decision needed before implementation
+**Next Approval Gate:** Resonance OS source/surface decision or Phase 5 polish/docs
 **Session State:** see `current.md` (16D shell — read on session open)
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
@@ -105,7 +105,7 @@
 ### Deferred / Needs Nick Input
 - [ ] Wakanda-specific tool registry entries — needs concrete ATS workflow examples
 - [ ] Multi-approver chain — Phase 4
-- [ ] **Resonance OS integration scoping** — see memory at `resonance_os_integration_pending.md`
+- [x] **Resonance OS integration scoping** — `docs/RESONANCE_OS_INTEGRATION_SCOPE.md`; implementation blocked until source/surface/memory relationship is answered
 
 ---
 
@@ -118,7 +118,7 @@
 - [x] Batman actor roles propagate through API mission state, `BatmanSupervisor`, and `BatmanGraph` into ABAC enforcement — `backend/api/schemas.py`, `backend/api/routes.py`, `backend/agents/supervisor.py`, `backend/agents/batman_graph.py` (`10d8ad1`)
 - [x] `ToolService` registry aligns with reviewer defaults and role registry vocabulary for safe mocked tools — `backend/services/tool_service.py`, `backend/services/role_registry.py`, `tests/unit/test_tool_service.py` (`47a4731`)
 - [x] Batman named-approver chain requires all listed approvers before task execution; unlisted approvers are rejected — `backend/api/routes.py`, `tests/integration/test_batman_workflow.py` (`6722a43`)
-- [ ] Resonance OS integration scoping — still not specced.
+- [x] Resonance OS integration scoping — documented in `docs/RESONANCE_OS_INTEGRATION_SCOPE.md`; source integration not started.
 
 ---
 
@@ -143,8 +143,9 @@
 - **Phase 1:** `docs/SPEC_PHASE1_BATMAN_MVP.md`
 - **Phase 3 Wakanda:** `docs/SPEC_PHASE3_WAKANDA.md` (draft, awaiting Nick review)
 - **Architecture:** `docs/ARCHITECTURE.md`
+- **Resonance OS Scoping:** `docs/RESONANCE_OS_INTEGRATION_SCOPE.md`
 
 ---
 
-**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Batman multi-approver chain complete)
+**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Resonance OS scoping documented)
 **Maintained By:** Mission Architect Agent

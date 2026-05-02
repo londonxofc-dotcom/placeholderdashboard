@@ -16,7 +16,7 @@ Phase 4 is not blank. Core service contracts are already tracked and passing, wi
 | Runtime actor-role propagation | Batman path landed | API mission state, `BatmanSupervisor`, and `BatmanGraph` pass `actor_roles` into ABAC enforcement |
 | Tool/role vocabulary alignment | Landed | Reviewer-allowed safe tools exist in `ToolService`; role registry grants matching names while preserving aliases |
 | Multi-approver chains | Batman path landed | Named Batman approvers are all-required before a task reaches `approved`; unlisted approvers receive 403 |
-| Resonance OS integration | Not specced | Still needs shape/source/surface decision |
+| Resonance OS integration | Scoping documented | `docs/RESONANCE_OS_INTEGRATION_SCOPE.md`; source integration blocked until shape/source/surface is answered |
 
 ## Verification
 
@@ -98,12 +98,12 @@ Implemented scope:
 - `tests/unit/test_tool_wrapper.py`
 - `tests/integration/test_batman_workflow.py`
 
-Next recommended gate: Resonance OS integration scoping.
+Next recommended gate: Resonance OS source/surface decision, or Phase 5 polish/docs if Resonance remains blocked.
 
 Allowed scope for that next gate should be limited to:
 
 - identifying what Resonance OS is and where it lives
 - deciding whether it plugs into audit feed, memory layer, mode orchestration, or decomposer input
-- writing a scope/spec document before any source integration
+- filling the decision gate in `docs/RESONANCE_OS_INTEGRATION_SCOPE.md` before any source integration
 
 Do not start source integration until the shape/source/surface decision is written down.
