@@ -41,6 +41,8 @@ class MissionService:
             "created_at": now,
             "completed_at": None,
             "tags": req.tags or [],
+            "actor_roles": req.actor_roles,
+            "abac_policy": req.abac_policy,
         }
 
         self.missions[mission_id] = mission

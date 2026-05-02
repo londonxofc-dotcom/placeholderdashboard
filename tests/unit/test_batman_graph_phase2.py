@@ -20,6 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from backend.agents.batman_graph import BatmanGraph
+from backend.models.mission import Mission, MissionMode
 from backend.services.cost_alert_service import CostAlertService
 from backend.services.cost_service import CostService
 from backend.services.memory_service import MemoryService
@@ -269,3 +270,26 @@ class TestABACEnforcementIntegration:
         # Verify ABACEnforcer instance exists and is ready for enforcement
         assert hasattr(graph, 'abac_enforcer')
         assert isinstance(graph.abac_enforcer, ABACEnforcer)
+
+    @pytest.mark.asyncio
+    async def test_actor_roles_are_passed_to_abac_enforcer(self):
+        graph = _make_graph(_mock_decomposer([CLEAN_TASKS[0]]))
+        mission = Mission(
+            created_by="tester",
+            mode=MissionMode.BATMAN,
+            objective="Work the contract",
+            approvers=["operator"],
+            abac_policy=BATMAN_ABAC_POLICY,
+        )
+
+        final = await graph.execute_approved(
+            mission_id="m_p2roles",
+            objective="Work the contract",
+            tasks=[CLEAN_TASKS[0]],
+            approved_task_ids=["t_clean1"],
+            mission=mission,
+            actor_roles=["viewer"],
+        )
+
+        assert final["execution_results"][0]["status"] == "blocked"
+        assert "Role check blocked" in final["execution_results"][0]["error"]

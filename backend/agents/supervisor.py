@@ -15,12 +15,14 @@ It wires together BatmanGraph + ExecutorAgent + all services.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any
 
 from backend.agents.batman_graph import BatmanGraph
 from backend.agents.decomposer import DecomposerAgent
 from backend.agents.executor import ExecutorAgent
 from backend.agents.reviewers import ReviewGate
+from backend.services.abac_enforcer import ABACEnforcer
 from backend.services.audit_service import AuditService
 from backend.services.cost_alert_service import CostAlert, CostAlertService
 from backend.services.cost_service import CostService
@@ -51,6 +53,7 @@ class BatmanSupervisor:
         self.decomposer = decomposer or DecomposerAgent()
         self.cost_alert_service = cost_alert_service or CostAlertService()
         self.audit_service = audit_service  # None = persistence disabled (legacy mode)
+        self.abac_enforcer = ABACEnforcer()
 
         self.graph = BatmanGraph(
             tool_service=self.tool_service,
@@ -92,6 +95,7 @@ class BatmanSupervisor:
         approved_task_ids: list[str],
         mode: str = "batman",
         abac_policy: dict[str, Any] | None = None,
+        actor_roles: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Execute tasks that the operator has approved.
@@ -106,6 +110,7 @@ class BatmanSupervisor:
         results = []
         total_cost = 0.0
         cost_alerts: list[dict[str, Any]] = []
+        mode_value = self._normalize_mode(mode)
 
         for task_id in approved_task_ids:
             task = next((t for t in all_tasks if t["id"] == task_id), None)
@@ -118,7 +123,11 @@ class BatmanSupervisor:
                 continue
 
             # --- Phase 2: review gate (spec Phase 2 §1) ---
-            review_results = review_gate.run(task, mode=mode, abac_policy=abac_policy)
+            review_results = review_gate.run(
+                task,
+                mode=mode_value,
+                abac_policy=abac_policy,
+            )
             review_dump = [r.model_dump() for r in review_results]
 
             # Persist review verdicts for audit trail (best-effort)
@@ -145,10 +154,31 @@ class BatmanSupervisor:
                 })
                 continue
 
+            tool_name = task.get("suggested_tool") or task.get("tool") or "search_knowledge"
+            if abac_policy is not None or actor_roles is not None:
+                mission_context = SimpleNamespace(
+                    mode=mode_value,
+                    abac_policy=abac_policy,
+                )
+                is_allowed, reason = self.abac_enforcer.can_invoke_tool(
+                    mission_context,
+                    tool_name,
+                    actor_roles=actor_roles,
+                )
+                if not is_allowed:
+                    results.append({
+                        "task_id": task_id,
+                        "status": "blocked",
+                        "review_results": review_dump,
+                        "error": f"ABAC policy blocked tool invocation: {reason}",
+                        "cost_usd": 0.0,
+                    })
+                    continue
+
             result = await self.executor.execute(
                 mission_id=mission_id,
                 task=task,
-                mode=mode,
+                mode=mode_value,
                 approver_id="operator",
             )
             results.append(result)
@@ -185,6 +215,13 @@ class BatmanSupervisor:
             "total_cost_usd": round(total_cost, 6),
             "cost_alerts": cost_alerts,
         }
+
+    @staticmethod
+    def _normalize_mode(mode: Any) -> str:
+        value = mode.value if hasattr(mode, "value") else str(mode)
+        if "." in value:
+            value = value.rsplit(".", 1)[-1]
+        return value.lower()
 
     # ------------------------------------------------------------------
     # Cost + memory helpers (for cockpit display)

@@ -42,6 +42,7 @@ class BatmanState(TypedDict, total=False):
     review_results: List[dict]     # ReviewResult.model_dump() entries, 3 per approved task
     cost_alerts: List[dict]        # CostAlert.model_dump() entries fired during execution
     mission_obj: Any                  # Optional Mission object for ABAC enforcement (Spec §5.3)
+    actor_roles: Optional[List[str]]  # Optional Phase 4 actor roles for ABAC enforcement
 
 
 # ---------------------------------------------------------------------------
@@ -108,8 +109,13 @@ class BatmanGraph:
         return result["tasks"]
 
     async def execute_approved(
-        self, mission_id: str, objective: str, tasks: List[dict], approved_task_ids: List[str],
-        mission=None  # Optional Mission object for ABAC enforcement
+        self,
+        mission_id: str,
+        objective: str,
+        tasks: List[dict],
+        approved_task_ids: List[str],
+        mission=None,  # Optional Mission object for ABAC enforcement
+        actor_roles: Optional[List[str]] = None,
     ) -> BatmanState:
         """
         Resume execution after human approval.
@@ -133,6 +139,8 @@ class BatmanGraph:
         # Attach mission to state if provided (used by ABAC enforcer)
         if mission is not None:
             state["mission_obj"] = mission
+        if actor_roles is not None:
+            state["actor_roles"] = list(actor_roles)
         final = await self._graph.ainvoke(state)
         return final  # type: ignore[return-value]
 
@@ -325,7 +333,11 @@ class BatmanGraph:
         # Validate tool invocation before execution to prevent unauthorized use
         if "mission_obj" in state and state.get("mission_obj") is not None:
             mission = state["mission_obj"]
-            is_allowed, reason = self.abac_enforcer.can_invoke_tool(mission, tool_name)
+            is_allowed, reason = self.abac_enforcer.can_invoke_tool(
+                mission,
+                tool_name,
+                actor_roles=state.get("actor_roles"),
+            )
             if not is_allowed:
                 result = {
                     "task_id": task_id,

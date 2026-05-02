@@ -107,6 +107,7 @@ def _mission_to_response(mission: dict[str, Any]) -> MissionResponse:
         approvers=mission["approvers"],
         cost_limit_usd=mission.get("cost_limit_usd"),
         total_cost_usd=mission.get("total_cost_usd", 0.0),
+        actor_roles=mission.get("actor_roles") or [],
         created_at=mission["created_at"],
         completed_at=mission.get("completed_at"),
         tags=mission.get("tags", []),
@@ -149,6 +150,7 @@ async def create_mission(req: CreateMissionRequest) -> MissionResponse:
         "created_at": now,
         "completed_at": None,
         "tags": req.tags or [],
+        "actor_roles": req.actor_roles,
         "abac_policy": req.abac_policy,
     }
     _missions[mission_id] = mission
@@ -300,8 +302,9 @@ async def execute_mission(mission_id: str) -> dict[str, Any]:
         objective=mission["objective"],
         all_tasks=all_tasks,
         approved_task_ids=approved_task_ids,
-        mode=str(mission["mode"]),
+        mode=mission["mode"].value if hasattr(mission["mode"], "value") else str(mission["mode"]),
         abac_policy=mission.get("abac_policy"),
+        actor_roles=mission.get("actor_roles"),
     )
 
     # Update task statuses from results

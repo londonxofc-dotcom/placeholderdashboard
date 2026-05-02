@@ -141,3 +141,19 @@ class TestSupervisorHonorsPolicy:
             # abac_policy intentionally omitted
         )
         assert summary["review_blocked_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_actor_roles_block_tool_after_review(self):
+        sup = _make_supervisor()
+        summary = await sup.execute_approved_tasks(
+            mission_id="m_p3d",
+            objective="Read contract",
+            all_tasks=[CLEAN_TASK],
+            approved_task_ids=["t_p3a"],
+            abac_policy=WIDE_POLICY,
+            actor_roles=["viewer"],
+        )
+
+        assert summary["review_blocked_count"] == 0
+        assert summary["results"][0]["status"] == "blocked"
+        assert "Role check blocked" in summary["results"][0]["error"]

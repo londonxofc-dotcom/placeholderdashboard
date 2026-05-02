@@ -55,6 +55,13 @@ class CreateMissionRequest(BaseModel):
     approvers: List[str] = Field(default_factory=list)
     cost_limit_usd: Optional[float] = Field(None, gt=0)
     tags: Optional[List[str]] = Field(default_factory=list)
+    actor_roles: Optional[List[str]] = Field(
+        None,
+        description=(
+            "Mission-scoped actor roles for Phase 4 ABAC role enforcement. "
+            "When omitted, runtime role checks remain disabled for backwards compatibility."
+        ),
+    )
     abac_policy: Optional[dict] = Field(
         None,
         description=(
@@ -69,6 +76,7 @@ class CreateMissionRequest(BaseModel):
                 "objective": "Summarize three documents and compile findings",
                 "mode": "batman",
                 "approvers": ["operator@example.com"],
+                "actor_roles": ["operator"],
                 "cost_limit_usd": 10.0,
                 "tags": ["urgent", "research"]
             }
@@ -149,6 +157,7 @@ class MissionResponse(BaseModel):
     approvers: List[str]
     cost_limit_usd: Optional[float] = None
     total_cost_usd: float = 0.0
+    actor_roles: List[str] = Field(default_factory=list)
     created_at: datetime
     completed_at: Optional[datetime] = None
     tags: List[str] = []
@@ -164,6 +173,7 @@ class MissionResponse(BaseModel):
                 "mode": "batman",
                 "state": "executing",
                 "approvers": ["operator@example.com"],
+                "actor_roles": ["operator"],
                 "cost_limit_usd": 10.0,
                 "total_cost_usd": 2.5,
                 "created_at": "2025-04-24T10:00:00Z",

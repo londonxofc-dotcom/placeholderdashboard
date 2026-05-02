@@ -281,3 +281,56 @@ async def test_cockpit_review_block_smoke(client: httpx.AsyncClient):
     assert len(failing) == 1
     assert failing[0]["reviewer"] == "code"
     assert "injection" in failing[0]["reason"].lower()
+
+
+async def test_cockpit_actor_roles_block_tool_invocation(client: httpx.AsyncClient):
+    """
+    Mission-scoped actor roles must survive create -> execute and reach the
+    live ABAC enforcement point, not only the standalone ABACEnforcer tests.
+    """
+    def side_effect(mission_id: str, objective: str):
+        return _stamp(mission_id, [CLEAN_RAW])
+
+    abac_policy = {
+        "allowed_tools": [
+            "read_file",
+            "search_knowledge",
+            "text_generator",
+            "scheduler",
+            "search",
+            "summarizer",
+        ],
+        "forbidden_params": ["api_key", "secret", "password", "token"],
+    }
+
+    with patch(
+        "backend.api.routes._supervisor.graph.decomposer.run",
+        new_callable=AsyncMock,
+        side_effect=side_effect,
+    ):
+        resp = await client.post(
+            "/api/missions",
+            json={
+                "objective": "Try to read with viewer role",
+                "mode": "batman",
+                "abac_policy": abac_policy,
+                "actor_roles": ["viewer"],
+            },
+        )
+    assert resp.status_code == 201, resp.text
+    mission_id = resp.json()["id"]
+
+    tasks = (await client.get(f"/api/missions/{mission_id}/tasks")).json()
+    task_id = tasks[0]["id"]
+    resp = await client.post(
+        f"/api/missions/{mission_id}/tasks/{task_id}/approve",
+        json={"approved": True, "approver_id": "operator"},
+    )
+    assert resp.status_code == 200
+
+    resp = await client.post(f"/api/missions/{mission_id}/execute")
+    assert resp.status_code == 200, resp.text
+    result = resp.json()["results"][0]
+
+    assert result["status"] == "blocked"
+    assert "Role check blocked" in result["error"]
