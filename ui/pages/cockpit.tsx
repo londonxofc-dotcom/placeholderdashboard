@@ -113,6 +113,7 @@ interface TaskResult {
   error?: string | null;
   cost_usd?: number;
   review_results?: ReviewResultItem[];
+  cost_alerts?: CostAlertItem[];
 }
 
 interface ResultsPayload {
@@ -246,14 +247,31 @@ export default function Cockpit() {
     await Promise.all([fetchCost(id), fetchResults(id), fetchAlerts(id)]);
   }, [fetchCost, fetchResults, fetchAlerts]);
 
-  // Poll only while execution is actually in flight. Waiting-for-approval
-  // missions still get one refresh, but do not keep a background interval open.
+  const applyExecutionSnapshot = useCallback((
+    executionResults: TaskResult[],
+    totalCostUsd: number,
+    costAlerts: CostAlertItem[] = [],
+  ) => {
+    setResults(executionResults);
+    setCostData({ total_cost: totalCostUsd });
+    setAlerts(costAlerts.length > 0 ? costAlerts : collectResultAlerts(executionResults));
+  }, []);
+
+  const appendTaskResult = useCallback((result: TaskResult) => {
+    setResults(previous => [...previous, result]);
+    setCostData(previous => ({
+      ...previous,
+      total_cost: (previous.total_cost ?? 0) + (result.cost_usd ?? 0),
+    }));
+    if (result.cost_alerts?.length) {
+      setAlerts(previous => [...previous, ...(result.cost_alerts ?? [])]);
+    }
+  }, []);
+
+  // Poll only while execution is actually in flight. Completed and
+  // waiting-for-approval missions consume the summaries returned by run calls.
   useEffect(() => {
-    if (!missionId) return;
-
-    void refreshMissionObservability(missionId);
-
-    if (missionState !== 'executing') return;
+    if (!missionId || missionState !== 'executing') return;
 
     const pollInterval = setInterval(() => {
       void refreshMissionObservability(missionId);
@@ -297,7 +315,7 @@ export default function Cockpit() {
         const run = await apiFetch<JarvisRunSummary>(`/missions/${created.id}/run`, {
           method: 'POST',
         });
-        setResults(run.results);
+        applyExecutionSnapshot(run.results, run.total_cost_usd, run.cost_alerts);
         setMissionState(missionStateFromRunStatus(run.status));
       } else {
         // Wakanda: classify + auto-run pass-through, return gated queue
@@ -305,7 +323,7 @@ export default function Cockpit() {
           `/missions/${created.id}/run-wakanda`,
           { method: 'POST' },
         );
-        setResults(run.pass_through_results);
+        applyExecutionSnapshot(run.pass_through_results, run.total_cost_usd);
         // Surface gated tasks in the approval queue
         const gatedQueue = run.tasks.filter(t => run.gated_task_ids.includes(t.id));
         setPendingTasks(gatedQueue);
@@ -334,13 +352,14 @@ export default function Cockpit() {
             body: JSON.stringify({ approved: true, approver_id: 'operator' }),
           });
         } else if (missionMode === 'wakanda') {
-          await apiFetch(
+          const result = await apiFetch<TaskResult>(
             `/missions/${missionId}/wakanda/tasks/${taskId}/approve`,
             {
               method: 'POST',
               body: JSON.stringify({ approved: true, approver_id: 'operator' }),
             },
           );
+          appendTaskResult(result);
         }
 
         // Drop the approved task from the queue
@@ -354,19 +373,21 @@ export default function Cockpit() {
               `/missions/${missionId}/execute`,
               { method: 'POST' },
             );
-            setResults(run.results ?? []);
+            applyExecutionSnapshot(
+              run.results ?? [],
+              run.total_cost_usd ?? 0,
+              run.cost_alerts ?? [],
+            );
             setMissionState(missionStateFromRunStatus(run.status));
           }
         } else if (missionMode === 'wakanda' && stillPending.length === 0) {
           setMissionState('completed');
         }
-
-        await refreshMissionObservability(missionId);
       } catch (err) {
         setActionError(err instanceof Error ? err.message : 'Approval failed');
       }
     },
-    [missionId, missionMode, pendingTasks, refreshMissionObservability],
+    [appendTaskResult, applyExecutionSnapshot, missionId, missionMode, pendingTasks],
   );
 
   const handleReject = useCallback(
@@ -385,7 +406,7 @@ export default function Cockpit() {
             }),
           });
         } else if (missionMode === 'wakanda') {
-          await apiFetch(
+          const result = await apiFetch<TaskResult>(
             `/missions/${missionId}/wakanda/tasks/${taskId}/approve`,
             {
               method: 'POST',
@@ -396,6 +417,7 @@ export default function Cockpit() {
               }),
             },
           );
+          appendTaskResult(result);
         }
 
         const stillPending = pendingTasks.filter(t => t.id !== taskId);
@@ -403,12 +425,11 @@ export default function Cockpit() {
         if (missionMode === 'wakanda' && stillPending.length === 0) {
           setMissionState('completed');
         }
-        await fetchResults(missionId);
       } catch (err) {
         setActionError(err instanceof Error ? err.message : 'Reject failed');
       }
     },
-    [missionId, missionMode, pendingTasks, fetchResults],
+    [appendTaskResult, missionId, missionMode, pendingTasks],
   );
 
   // -------------------------------------------------------------------------
@@ -611,6 +632,10 @@ function missionStateFromRunStatus(status: string): MissionState {
   if (status === 'failed') return 'failed';
   if (status === 'partial') return 'partial';
   return 'executing';
+}
+
+function collectResultAlerts(results: TaskResult[]): CostAlertItem[] {
+  return results.flatMap(result => result.cost_alerts ?? []);
 }
 
 // ---------------------------------------------------------------------------

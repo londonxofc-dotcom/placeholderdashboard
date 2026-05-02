@@ -136,6 +136,7 @@ describe("Cockpit launch flows", () => {
 
   it("runs Jarvis immediately and never renders an approval queue", async () => {
     const user = userEvent.setup();
+    let observabilityFetches = 0;
     const results = [
       {
         task_id: "t-jarvis",
@@ -158,11 +159,10 @@ describe("Cockpit launch flows", () => {
       total_cost_usd: 0.04,
       cost_alerts: [],
     }));
-    route("GET", /\/missions\/m-jarvis\/results$/, () => ({
-      mission_id: "m-jarvis",
-      results,
-      total_cost_usd: 0.04,
-    }));
+    route("GET", /\/missions\/m-jarvis\/(cost|results|alerts)$/, () => {
+      observabilityFetches += 1;
+      return {};
+    });
 
     render(<Cockpit />);
     await user.click(screen.getByRole("button", { name: /^fractal$/i }));
@@ -174,10 +174,12 @@ describe("Cockpit launch flows", () => {
     });
     expect(screen.queryByText(/^approval queue$/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/^gated queue$/i)).not.toBeInTheDocument();
+    expect(observabilityFetches).toBe(0);
   });
 
   it("surfaces Wakanda gated tasks beside pass-through results", async () => {
     const user = userEvent.setup();
+    let observabilityFetches = 0;
     const passThroughResults = [
       {
         task_id: "t-internal",
@@ -203,11 +205,10 @@ describe("Cockpit launch flows", () => {
       pass_through_results: passThroughResults,
       total_cost_usd: 0.01,
     }));
-    route("GET", /\/missions\/m-wakanda\/results$/, () => ({
-      mission_id: "m-wakanda",
-      results: passThroughResults,
-      total_cost_usd: 0.01,
-    }));
+    route("GET", /\/missions\/m-wakanda\/(cost|results|alerts)$/, () => {
+      observabilityFetches += 1;
+      return {};
+    });
 
     render(<Cockpit />);
     await user.click(screen.getByRole("button", { name: /^ats$/i }));
@@ -219,6 +220,7 @@ describe("Cockpit launch flows", () => {
     });
     expect(screen.getByText(/announce release on ig/i)).toBeInTheDocument();
     expect(screen.getByText(/internal a&r notes/i)).toBeInTheDocument();
+    expect(observabilityFetches).toBe(0);
   });
 
   it("surfaces submit errors from mission creation", async () => {
@@ -250,6 +252,7 @@ describe("Cockpit approval flows", () => {
     ];
     const approvals: string[] = [];
     let executeCalls = 0;
+    let observabilityFetches = 0;
 
     route("POST", /\/missions$/, () => ({
       id: "m-bat-2",
@@ -276,11 +279,10 @@ describe("Cockpit approval flows", () => {
         cost_alerts: [],
       };
     });
-    route("GET", /\/missions\/m-bat-2\/results$/, () => ({
-      mission_id: "m-bat-2",
-      results: executeCalls > 0 ? completedResults : [],
-      total_cost_usd: executeCalls > 0 ? 0.02 : 0,
-    }));
+    route("GET", /\/missions\/m-bat-2\/(cost|results|alerts)$/, () => {
+      observabilityFetches += 1;
+      return {};
+    });
 
     render(<Cockpit />);
     await user.type(screen.getByPlaceholderText(/enter mission objective/i), "Run Batman");
@@ -302,12 +304,14 @@ describe("Cockpit approval flows", () => {
       expect(screen.getByText(/^done$/i)).toBeInTheDocument();
     });
     expect(hasCockpitPollIntervalBeenScheduled(setIntervalSpy)).toBe(false);
+    expect(observabilityFetches).toBe(0);
   });
 
   it("uses Wakanda approval endpoint and completes when the gated queue empties", async () => {
     const user = userEvent.setup();
     let wakandaApprovalCalls = 0;
     let batmanExecuteCalls = 0;
+    let observabilityFetches = 0;
 
     route("POST", /\/missions$/, () => ({
       id: "m-wak-approve",
@@ -335,21 +339,10 @@ describe("Cockpit approval flows", () => {
       batmanExecuteCalls += 1;
       return {};
     });
-    route("GET", /\/missions\/m-wak-approve\/results$/, () => ({
-      mission_id: "m-wak-approve",
-      results:
-        wakandaApprovalCalls > 0
-          ? [
-              {
-                task_id: "t-gated",
-                task_name: "Public announcement",
-                status: "completed",
-                cost_usd: 0.01,
-              },
-            ]
-          : [],
-      total_cost_usd: wakandaApprovalCalls > 0 ? 0.01 : 0,
-    }));
+    route("GET", /\/missions\/m-wak-approve\/(cost|results|alerts)$/, () => {
+      observabilityFetches += 1;
+      return {};
+    });
 
     render(<Cockpit />);
     await user.click(screen.getByRole("button", { name: /^ats$/i }));
@@ -366,5 +359,6 @@ describe("Cockpit approval flows", () => {
       expect(screen.getByText(/^done$/i)).toBeInTheDocument();
     });
     expect(batmanExecuteCalls).toBe(0);
+    expect(observabilityFetches).toBe(0);
   });
 });
