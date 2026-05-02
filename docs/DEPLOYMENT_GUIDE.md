@@ -100,6 +100,15 @@ Run the combined local preflight:
 .venv/bin/python tools/deployment_preflight.py
 ```
 
+For launch-gate verification, include the deployment decision record check:
+
+```bash
+.venv/bin/python tools/deployment_preflight.py --include-decision-check
+```
+
+This variant is expected to fail until `docs/DEPLOYMENT_DECISION_RECORD.md`
+has real target, secrets, access, and budget decisions.
+
 Or run the checks directly:
 
 ```bash

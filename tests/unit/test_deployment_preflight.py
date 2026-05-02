@@ -16,6 +16,19 @@ def test_build_steps_defaults_to_full_preflight():
     assert steps[3].command == ("npm", "--prefix", "ui", "test")
 
 
+def test_build_steps_can_include_decision_check():
+    steps = deployment_preflight.build_steps(include_decision_check=True)
+
+    assert [step.name for step in steps] == [
+        "deployment decision check",
+        "backend tests",
+        "ui typecheck",
+        "ui build",
+        "ui tests",
+    ]
+    assert steps[0].command[1:] == ("tools/deployment_decision_check.py",)
+
+
 def test_build_steps_can_run_backend_only():
     steps = deployment_preflight.build_steps(include_backend=True, include_ui=False)
 
@@ -99,3 +112,22 @@ def test_main_passes_when_selected_steps_pass(monkeypatch, capsys):
     assert code == 0
     assert calls == ["backend tests"]
     assert "Preflight passed" in capsys.readouterr().out
+
+
+def test_main_can_fail_at_decision_check(monkeypatch, capsys):
+    calls: list[str] = []
+
+    def fake_run_step(step):
+        calls.append(step.name)
+        return 1 if step.name == "deployment decision check" else 0
+
+    monkeypatch.setattr(deployment_preflight, "run_step", fake_run_step)
+    monkeypatch.setattr(deployment_preflight, "protected_file_status", lambda: "")
+
+    code = deployment_preflight.main(
+        ["--backend-only", "--include-decision-check"]
+    )
+
+    assert code == 1
+    assert calls == ["deployment decision check"]
+    assert "Preflight failed at: deployment decision check" in capsys.readouterr().err
