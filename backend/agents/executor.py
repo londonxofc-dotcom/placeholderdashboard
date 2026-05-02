@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from backend.services.cost_service import CostService
+from backend.services.memory_isolation import MemoryIsolationService
 from backend.services.memory_service import MemoryService
 from backend.services.tool_service import ToolService
 
@@ -25,7 +26,7 @@ class ExecutorAgent:
     Responsibilities:
     - ABAC permission check via ToolService
     - Cost tracking via CostService
-    - Result storage via MemoryService
+    - Result storage via MemoryIsolationService
     - Returns an immutable ExecutionResult dict
 
     MVP: tool invocation is simulated (real tool calls in Phase 2).
@@ -40,6 +41,7 @@ class ExecutorAgent:
         self.tool_service = tool_service
         self.cost_service = cost_service
         self.memory_service = memory_service
+        self.memory_isolation = MemoryIsolationService(memory_service)
 
     # ------------------------------------------------------------------
     # Public
@@ -100,11 +102,12 @@ class ExecutorAgent:
                 mission_id, tool_cost, f"tool:{tool_name} task:{task_id}"
             )
 
-            # Store result in mission-scoped memory
-            self.memory_service.store(
+            # Store result through the mission isolation boundary.
+            self.memory_isolation.write(
                 mission_id,
                 f"task_{task_id}_result",
                 {"task_name": task_name, "tool": tool_name, "output": output},
+                memory_scope="isolated",
                 visibility="task",
             )
 

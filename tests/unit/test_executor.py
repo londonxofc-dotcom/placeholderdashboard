@@ -77,9 +77,29 @@ class TestExecutorAgent:
     async def test_execute_stores_result_in_memory(self, executor):
         task = _make_task(tool="read_file")
         await executor.execute("m_mem001", task, "batman", "operator")
-        entry = executor.memory_service.retrieve("m_mem001", "task_t_abc12345_result")
+        entry = executor.memory_isolation.read(
+            "m_mem001",
+            "m_mem001",
+            "task_t_abc12345_result",
+            memory_scope="isolated",
+        )
         assert entry is not None
         assert entry["task_name"] == "Test task"
+
+    @pytest.mark.asyncio
+    async def test_execute_namespaces_memory_write_through_isolation_boundary(self, executor):
+        task = _make_task(tool="read_file")
+        await executor.execute("m_iso001", task, "batman", "operator")
+
+        raw_entry = executor.memory_service.retrieve("m_iso001", "task_t_abc12345_result")
+        scoped_entry = executor.memory_service.retrieve(
+            "m_iso001",
+            "m_iso001::task_t_abc12345_result",
+        )
+
+        assert raw_entry is None
+        assert scoped_entry is not None
+        assert scoped_entry["tool"] == "read_file"
 
     @pytest.mark.asyncio
     async def test_blocked_tool_returns_blocked_status(self, executor):
