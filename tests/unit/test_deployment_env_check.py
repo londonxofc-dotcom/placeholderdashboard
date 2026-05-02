@@ -192,6 +192,46 @@ def test_production_profile_requires_next_public_api_url_http_url():
     assert deployment_env_check.has_blockers(rows) is True
 
 
+def test_production_profile_rejects_next_public_api_url_with_query():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://example",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com",
+            "NEXT_PUBLIC_API_URL": (
+                "https://backend.example.com/api?token=secret"
+            ),
+        },
+        production=True,
+    )
+
+    assert rows[3] == {
+        "name": "NEXT_PUBLIC_API_URL",
+        "status": "invalid",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_production_profile_rejects_next_public_api_url_with_fragment():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://example",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com",
+            "NEXT_PUBLIC_API_URL": "https://backend.example.com/api#health",
+        },
+        production=True,
+    )
+
+    assert rows[3] == {
+        "name": "NEXT_PUBLIC_API_URL",
+        "status": "invalid",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
 def test_production_profile_accepts_next_public_api_url_api_path():
     rows = deployment_env_check.check_environment(
         {

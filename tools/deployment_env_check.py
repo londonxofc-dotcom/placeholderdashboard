@@ -55,7 +55,7 @@ def is_valid_production_value(name: str, value: str | None) -> bool:
     if name == "DATABASE_URL":
         return is_postgres_url(value)
     if name == "NEXT_PUBLIC_API_URL":
-        return is_http_url(value) and has_api_path(value)
+        return is_exact_backend_api_url(value)
     if name == "ALLOWED_ORIGINS":
         return allowed_origins_are_valid(value)
     invalid_values = INVALID_PRODUCTION_VALUES.get(name, set())
@@ -76,6 +76,17 @@ def has_api_path(value: str) -> bool:
 def is_http_url(value: str) -> bool:
     parsed = urlparse(value)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def is_exact_backend_api_url(value: str) -> bool:
+    parsed = urlparse(value)
+    return (
+        is_http_url(value)
+        and has_api_path(value)
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+    )
 
 
 def is_postgres_url(value: str) -> bool:
