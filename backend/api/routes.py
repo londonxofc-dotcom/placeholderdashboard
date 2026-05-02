@@ -116,6 +116,10 @@ def _mission_to_response(mission: dict[str, Any]) -> MissionResponse:
     )
 
 
+def _tasks_by_id(tasks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {task["id"]: task for task in tasks}
+
+
 def _required_approvers(mission: dict[str, Any], fallback_approver: str) -> list[str]:
     approvers = mission.get("approvers") or []
     return list(approvers) if approvers else [fallback_approver]
@@ -244,7 +248,7 @@ async def approve_task(
     mission = _get_mission_or_404(mission_id)
 
     mission_tasks = _tasks.get(mission_id, [])
-    task = next((t for t in mission_tasks if t["id"] == task_id), None)
+    task = _tasks_by_id(mission_tasks).get(task_id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -341,8 +345,9 @@ async def execute_mission(mission_id: str) -> dict[str, Any]:
     )
 
     # Update task statuses from results
+    task_by_id = _tasks_by_id(all_tasks)
     for result in summary["results"]:
-        task = next((t for t in all_tasks if t["id"] == result["task_id"]), None)
+        task = task_by_id.get(result["task_id"])
         if task:
             task["status"] = (
                 TaskStatus.COMPLETED
