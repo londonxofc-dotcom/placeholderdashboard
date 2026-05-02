@@ -13,6 +13,34 @@ def test_local_profile_only_requires_database_url():
     assert deployment_env_check.has_blockers(rows) is True
 
 
+def test_local_profile_rejects_malformed_database_url():
+    rows = deployment_env_check.check_environment(
+        {"DATABASE_URL": "not-a-url"},
+        production=False,
+    )
+
+    assert rows[0] == {
+        "name": "DATABASE_URL",
+        "status": "invalid",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_local_profile_accepts_postgres_database_url():
+    rows = deployment_env_check.check_environment(
+        {"DATABASE_URL": "postgresql://localhost/app"},
+        production=False,
+    )
+
+    assert rows[0] == {
+        "name": "DATABASE_URL",
+        "status": "ok",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is False
+
+
 def test_production_profile_requires_deployment_variables():
     rows = deployment_env_check.check_environment(
         {

@@ -49,15 +49,22 @@ def is_configured(value: str | None, *, allow_placeholder: bool = False) -> bool
     return normalized.lower() not in PLACEHOLDER_VALUES
 
 
-def is_valid_production_value(name: str, value: str | None) -> bool:
+def is_valid_value(
+    name: str,
+    value: str | None,
+    *,
+    production: bool,
+) -> bool:
     if value is None:
         return True
     if name == "DATABASE_URL":
         return is_postgres_url(value)
-    if name == "NEXT_PUBLIC_API_URL":
+    if production and name == "NEXT_PUBLIC_API_URL":
         return is_exact_backend_api_url(value)
-    if name == "ALLOWED_ORIGINS":
+    if production and name == "ALLOWED_ORIGINS":
         return allowed_origins_are_valid(value)
+    if not production:
+        return True
     invalid_values = INVALID_PRODUCTION_VALUES.get(name, set())
     normalized_values = {
         item.strip().lower()
@@ -127,9 +134,10 @@ def check_environment(
             env.get(requirement.name),
             allow_placeholder=requirement.allow_placeholder,
         )
-        if configured and production and not is_valid_production_value(
+        if configured and not is_valid_value(
             requirement.name,
             env.get(requirement.name),
+            production=production,
         ):
             status = "invalid"
         elif configured:
