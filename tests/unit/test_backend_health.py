@@ -52,6 +52,31 @@ async def test_health_reports_current_phase_without_dependency_checks():
     assert body["phase"] == "Phase 5 - Polish & Launch"
 
 
+async def test_status_reports_runtime_snapshot_without_dependency_checks():
+    app = _get_app()
+    transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+
+    with patch("backend.main.engine.connect") as connect, patch.dict(
+        "os.environ", {"ENV": "test"}, clear=False
+    ):
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/status")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ok"
+    assert body["version"] == "0.0.1"
+    assert body["phase"] == "Phase 5 - Polish & Launch"
+    assert body["environment"] == "test"
+    assert body["uptime_seconds"] >= 0
+    assert "started_at" in body
+    assert body["probes"] == {
+        "liveness": "/health",
+        "readiness": "/ready",
+    }
+    connect.assert_not_called()
+
+
 async def test_ready_reports_ready_when_database_check_passes():
     app = _get_app()
     connection = MagicMock()

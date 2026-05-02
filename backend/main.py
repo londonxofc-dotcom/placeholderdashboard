@@ -14,6 +14,7 @@ from backend.db.session import engine, init_db
 
 APP_VERSION = "0.0.1"
 APP_PHASE = "Phase 5 - Polish & Launch"
+STARTED_AT = datetime.now(timezone.utc)
 
 # Lifespan context for startup/shutdown
 @asynccontextmanager
@@ -66,6 +67,24 @@ async def health_check():
         "status": "ok",
         "version": APP_VERSION,
         "phase": APP_PHASE,
+    }
+
+
+@app.get("/status")
+async def status_check():
+    """Non-secret runtime status snapshot for deployment monitors."""
+    now = datetime.now(timezone.utc)
+    return {
+        "status": "ok",
+        "version": APP_VERSION,
+        "phase": APP_PHASE,
+        "environment": os.getenv("ENV", "dev"),
+        "started_at": STARTED_AT.isoformat(),
+        "uptime_seconds": round((now - STARTED_AT).total_seconds(), 3),
+        "probes": {
+            "liveness": "/health",
+            "readiness": "/ready",
+        },
     }
 
 

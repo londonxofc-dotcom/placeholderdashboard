@@ -55,10 +55,13 @@ Check backend liveness and readiness:
 
 ```bash
 curl http://localhost:8000/health
+curl http://localhost:8000/status
 curl http://localhost:8000/ready
 ```
 
-`/health` is a lightweight liveness probe. `/ready` checks deployment readiness
+`/health` is a lightweight liveness probe. `/status` is a non-secret runtime
+snapshot for monitors and dashboards, including uptime and probe locations.
+`/ready` checks deployment readiness
 and returns dependency status for the API router, database, and required
 Claude credential presence without exposing connection strings, secret values,
 or raw exception text.
@@ -139,6 +142,7 @@ Conservative first pass:
 - Secrets only in host environment settings.
 - CORS locked to the deployed cockpit URL.
 - Backend host readiness probe pointed at `/ready`; liveness probe pointed at `/health`.
+- Dashboards can poll `/status` for version, phase, environment, uptime, and probe paths.
 - `/ready` must return `status: ready` before real missions are enabled; `status: degraded`
   means the host is reachable but a dependency or required credential is missing.
 - No real external music/label integrations until a workflow-specific gate is approved.
