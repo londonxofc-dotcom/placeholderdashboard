@@ -1,10 +1,10 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 4 reconciliation → integration wiring next
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅.
 **Active Worktrees:** none
 **Blockers:** none
-**Next Approval Gate:** Phase 4 multi-approver chain scoping
+**Next Approval Gate:** Resonance OS integration scoping
 **Session State:** see `current.md` (16D shell — read on session open)
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
@@ -117,7 +117,7 @@
 - [x] ABACEnforcer role-layer extension remains backward-compatible — `tests/unit/test_phase4_abac_enforcer.py` (`f153c43`)
 - [x] Batman actor roles propagate through API mission state, `BatmanSupervisor`, and `BatmanGraph` into ABAC enforcement — `backend/api/schemas.py`, `backend/api/routes.py`, `backend/agents/supervisor.py`, `backend/agents/batman_graph.py` (`10d8ad1`)
 - [x] `ToolService` registry aligns with reviewer defaults and role registry vocabulary for safe mocked tools — `backend/services/tool_service.py`, `backend/services/role_registry.py`, `tests/unit/test_tool_service.py` (`47a4731`)
-- [ ] Multi-approver chain — still deferred / needs concrete approval flow.
+- [x] Batman named-approver chain requires all listed approvers before task execution; unlisted approvers are rejected — `backend/api/routes.py`, `tests/integration/test_batman_workflow.py` (`6722a43`)
 - [ ] Resonance OS integration scoping — still not specced.
 
 ---
@@ -146,5 +146,5 @@
 
 ---
 
-**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Phase 4 memory boundary audit complete)
+**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Batman multi-approver chain complete)
 **Maintained By:** Mission Architect Agent
