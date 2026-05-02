@@ -130,6 +130,15 @@ Check deployment environment readiness without printing secret values:
 This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing.
 
+After a backend is running locally or on a host, check the public probes:
+
+```bash
+.venv/bin/python tools/deployment_probe_check.py --base-url http://localhost:8000
+```
+
+Use the deployed backend base URL for production. The base URL should not
+include `/api`; the checker calls `/health`, `/status`, and `/ready`.
+
 ## Production Deployment Decision Points
 
 Before writing deployment config, decide:
