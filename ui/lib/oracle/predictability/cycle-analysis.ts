@@ -13,14 +13,14 @@ export function detectCycleAlignment(
     }
   }
 
-  const windowDate = new Date(window.timestamp)
+  const windowDate = new Date(window.end)
   let bestScore = 0
   let bestCycle: CycleWindow | null = null
   let bestPhase = 0
 
   for (const cycle of cycleHistory) {
     const phase = estimateCyclePhase(cycle.lastObserved, cycle.period)
-    const windowPhase = estimateCyclePhase(window.timestamp, cycle.period)
+    const windowPhase = estimateCyclePhase(window.end, cycle.period)
     const phaseDiff = Math.abs(windowPhase - phase)
     const phaseAlignment = 1 - Math.min(phaseDiff, 1 - phaseDiff)
 

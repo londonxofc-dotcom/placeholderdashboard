@@ -2,20 +2,28 @@ import { describe, test, expect } from 'vitest'
 import { compareTrendWindows, classifyTrendDirection, scoreTrendMomentum } from '../trend-delta'
 import type { TrendWindow } from '../types'
 
+const createTrendWindow = (overrides: Partial<TrendWindow> = {}): TrendWindow => ({
+  id: 'trend-window',
+  label: 'Trend window',
+  start: '2026-04-20',
+  end: '2026-04-20',
+  scale: 'meso',
+  signalType: 'engagement',
+  value: 0.5,
+  confidence: 0.9,
+  sourceTier: 'T0',
+  ...overrides,
+})
+
 describe('trend-delta', () => {
   test('classifies rising trend correctly', () => {
-    const previous: TrendWindow = {
-      signalType: 'engagement',
-      timestamp: '2026-04-20',
-      value: 0.5,
-      confidence: 0.9
-    }
-    const current: TrendWindow = {
-      signalType: 'engagement',
-      timestamp: '2026-04-25',
+    const previous = createTrendWindow()
+    const current = createTrendWindow({
+      id: 'trend-window-current',
+      end: '2026-04-25',
       value: 0.7,
-      confidence: 0.85
-    }
+      confidence: 0.85,
+    })
 
     const delta = compareTrendWindows(previous, current)
 
@@ -28,18 +36,22 @@ describe('trend-delta', () => {
   })
 
   test('classifies falling trend correctly', () => {
-    const previous: TrendWindow = {
+    const previous = createTrendWindow({
+      id: 'velocity-previous',
       signalType: 'velocity',
-      timestamp: '2026-04-10',
+      start: '2026-04-10',
+      end: '2026-04-10',
       value: 0.8,
-      confidence: 0.92
-    }
-    const current: TrendWindow = {
+      confidence: 0.92,
+    })
+    const current = createTrendWindow({
+      id: 'velocity-current',
       signalType: 'velocity',
-      timestamp: '2026-04-15',
+      start: '2026-04-15',
+      end: '2026-04-15',
       value: 0.3,
-      confidence: 0.88
-    }
+      confidence: 0.88,
+    })
 
     const delta = compareTrendWindows(previous, current)
 
@@ -49,18 +61,22 @@ describe('trend-delta', () => {
   })
 
   test('classifies flat trend when delta is small', () => {
-    const previous: TrendWindow = {
+    const previous = createTrendWindow({
+      id: 'stability-previous',
       signalType: 'stability',
-      timestamp: '2026-04-01',
+      start: '2026-04-01',
+      end: '2026-04-01',
       value: 0.5,
-      confidence: 0.9
-    }
-    const current: TrendWindow = {
+      confidence: 0.9,
+    })
+    const current = createTrendWindow({
+      id: 'stability-current',
       signalType: 'stability',
-      timestamp: '2026-04-05',
+      start: '2026-04-05',
+      end: '2026-04-05',
       value: 0.51,
-      confidence: 0.91
-    }
+      confidence: 0.91,
+    })
 
     const delta = compareTrendWindows(previous, current)
 

@@ -1,10 +1,8 @@
 import type {
   PredictabilityInput,
   PredictabilityForecast,
-  TrendWindow,
   TrendDelta,
   RegimeState,
-  BehavioralPattern,
   ForecastBand
 } from './types'
 import { compareTrendWindows, scoreTrendMomentum } from './trend-delta'
@@ -27,7 +25,7 @@ export function calculatePredictabilityForecast(input: PredictabilityInput): Pre
 
   if (input.trendWindows && input.trendWindows.length >= 2) {
     const sorted = [...input.trendWindows].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      (a, b) => new Date(a.end).getTime() - new Date(b.end).getTime()
     )
 
     const previous = sorted[sorted.length - 2]
@@ -38,7 +36,7 @@ export function calculatePredictabilityForecast(input: PredictabilityInput): Pre
 
     // Check for stale trends
     const daysSinceTrend =
-      (new Date(input.targetDate).getTime() - new Date(current.timestamp).getTime()) /
+      (new Date(input.targetDate).getTime() - new Date(current.end).getTime()) /
       (1000 * 60 * 60 * 24)
     if (daysSinceTrend > 30) {
       warnings.push('stale_trend')
@@ -110,16 +108,22 @@ export function calculatePredictabilityForecast(input: PredictabilityInput): Pre
   // Score cycles aligned to horizon
   let cycleScore = 0
   const horizonToCycleScale: Record<string, string> = {
-    short_term: 'micro',
-    medium_term: 'meso',
-    long_term: 'macro'
+    short: 'micro',
+    medium: 'meso',
+    long: 'macro'
   }
   const targetScale = horizonToCycleScale[input.horizon] || 'meso'
 
   if (input.cycleWindows && input.cycleWindows.length > 0) {
     const relevantCycles = input.cycleWindows.filter(c => c.scale === targetScale)
     if (relevantCycles.length > 0) {
-      const cycleScores = relevantCycles.map(c => c.strength * c.alignmentWithObjective)
+      const cycleScores = relevantCycles.map(c => {
+        const targetTime = new Date(input.targetDate).getTime()
+        const observedTime = new Date(c.lastObserved).getTime()
+        const daysSinceObserved = (targetTime - observedTime) / (1000 * 60 * 60 * 24)
+        const recencyFactor = Math.max(0.4, Math.min(1, 1 - daysSinceObserved / (c.period * 2)))
+        return c.confidence * recencyFactor
+      })
       cycleScore = cycleScores.reduce((a, b) => a + b, 0) / cycleScores.length
       supportingEvidence.push(
         `${targetScale} cycle alignment: ${(cycleScore * 100).toFixed(0)}% to objective`
@@ -139,8 +143,11 @@ export function calculatePredictabilityForecast(input: PredictabilityInput): Pre
   }
 
   // Check for scaffold fixtures
-  const scaffoldLandmarks = input.landmarkEvents?.filter(e => e.sourceTier === 'T3' || e.sourceTier.startsWith('T')) || []
-  const hasScaffoldAsOnlySource = scaffoldLandmarks.length > 0 && !input.landmarkEvents?.some(e => !e.sourceTier.startsWith('T3') && !e.sourceTier.startsWith('T4') && !e.sourceTier.startsWith('T5'))
+  const lowTrustSourceTiers = new Set(['T3', 'T4', 'T5'])
+  const landmarkEvents = input.landmarkEvents || []
+  const scaffoldLandmarks = landmarkEvents.filter(e => lowTrustSourceTiers.has(e.sourceTier))
+  const hasScaffoldAsOnlySource =
+    landmarkEvents.length > 0 && scaffoldLandmarks.length === landmarkEvents.length
   if (hasScaffoldAsOnlySource) {
     warnings.push('scaffold_fixtures_only')
   }
@@ -168,23 +175,26 @@ export function calculatePredictabilityForecast(input: PredictabilityInput): Pre
   }
 
   return {
-    confidence: finalScore,
+    scenario: `${input.domain}:${input.objective}:${input.targetDate}`,
     forecastBand,
-    horizon: input.horizon,
-    domain: input.domain,
-    targetDate: input.targetDate,
+    score: finalScore,
+    confidence: finalScore,
+    trendDeltas: trendDelta ? [trendDelta] : [],
+    activeRegime,
     supportingEvidence,
     opposingEvidence,
     behavioralSignals,
     warnings,
-    activeRegimeState: activeRegime || undefined,
-    evidenceCount,
     assumptions: [
       '180-day decay half-life for landmark influence',
       'trend window confidence averaged for trend delta',
       'behavioral patterns scored by win rate with observation confidence',
       `cycle alignment measured against ${targetScale} scale for ${input.horizon} horizon`,
       'confidence boost of 0.8 baseline plus 6.7% per evidence item (capped +0.2)'
-    ]
+    ],
+    recommendedNextMove:
+      warnings.length > 0
+        ? 'Review warnings and supporting evidence before using this advisory forecast.'
+        : 'Use as advisory input for human review; do not take autonomous action.'
   }
 }

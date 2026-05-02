@@ -5,15 +5,23 @@ import {
   classifyCycleScale,
   estimateCyclePhase
 } from '../cycle-analysis'
-import { CycleWindow, TrendWindow } from '../types'
+import type { CycleWindow, TrendWindow } from '../types'
+
+const createTrendWindow = (overrides: Partial<TrendWindow> = {}): TrendWindow => ({
+  id: 'trend-window',
+  label: 'Trend window',
+  start: '2026-04-15T00:00:00Z',
+  end: '2026-04-15T00:00:00Z',
+  scale: 'meso',
+  signalType: 'engagement',
+  value: 0.75,
+  confidence: 0.85,
+  sourceTier: 'T0',
+  ...overrides,
+})
 
 describe('cycle-analysis', () => {
-  const sampleWindow: TrendWindow = {
-    signalType: 'engagement',
-    timestamp: '2026-04-15T00:00:00Z',
-    value: 0.75,
-    confidence: 0.85
-  }
+  const sampleWindow = createTrendWindow()
 
   const recentCycles: CycleWindow[] = [
     {
@@ -44,10 +52,11 @@ describe('cycle-analysis', () => {
   })
 
   test('detectCycleAlignment: stale, non-aligned window decreases score', () => {
-    const offsetWindow: TrendWindow = {
+    const offsetWindow = createTrendWindow({
       ...sampleWindow,
-      timestamp: '2026-02-01T13:37:00Z'
-    }
+      start: '2026-02-01T13:37:00Z',
+      end: '2026-02-01T13:37:00Z',
+    })
     const staleCycles: CycleWindow[] = [
       {
         period: 7,
@@ -84,12 +93,13 @@ describe('cycle-analysis', () => {
   })
 
   test('scoreCycleWindow: aligned micro cycle with matching phase scores high', () => {
-    const window: TrendWindow = {
-      signalType: 'engagement',
-      timestamp: '2026-04-16T00:00:00Z',
+    const window = createTrendWindow({
+      id: 'micro-window',
+      start: '2026-04-16T00:00:00Z',
+      end: '2026-04-16T00:00:00Z',
       value: 0.8,
-      confidence: 0.9
-    }
+      confidence: 0.9,
+    })
     const microCycles: CycleWindow[] = [
       {
         period: 1,
@@ -103,12 +113,7 @@ describe('cycle-analysis', () => {
   })
 
   test('scoreCycleWindow: unaligned or stale cycles reduce score', () => {
-    const window: TrendWindow = {
-      signalType: 'engagement',
-      timestamp: '2026-04-15T00:00:00Z',
-      value: 0.75,
-      confidence: 0.8
-    }
+    const window = createTrendWindow({ confidence: 0.8 })
     const staleCycles: CycleWindow[] = [
       {
         period: 7,
@@ -122,24 +127,14 @@ describe('cycle-analysis', () => {
   })
 
   test('scoreCycleWindow: empty cycle history scores baseline', () => {
-    const window: TrendWindow = {
-      signalType: 'engagement',
-      timestamp: '2026-04-15T00:00:00Z',
-      value: 0.75,
-      confidence: 0.8
-    }
+    const window = createTrendWindow({ confidence: 0.8 })
     const score = scoreCycleWindow(window, [])
     expect(score).toBeGreaterThanOrEqual(0.4)
     expect(score).toBeLessThanOrEqual(0.6)
   })
 
   test('scoreCycleWindow: macro and meso cycles influence long horizon', () => {
-    const window: TrendWindow = {
-      signalType: 'engagement',
-      timestamp: '2026-04-15T00:00:00Z',
-      value: 0.75,
-      confidence: 0.85
-    }
+    const window = createTrendWindow()
     const macroCycles: CycleWindow[] = [
       {
         period: 30,

@@ -2,26 +2,66 @@ import { describe, test, expect } from 'vitest'
 import { calculatePredictabilityForecast } from '../predictability-kernel'
 import type { PredictabilityInput, TrendWindow, LandmarkEvent, BehavioralPattern, CycleWindow } from '../types'
 
+const createTrendWindow = (overrides: Partial<TrendWindow> = {}): TrendWindow => ({
+  id: 'trend-window',
+  label: 'Trend window',
+  start: '2026-04-20',
+  end: '2026-04-20',
+  scale: 'meso',
+  signalType: 'test_signal',
+  value: 0.5,
+  confidence: 0.8,
+  sourceTier: 'T0',
+  ...overrides,
+})
+
+const createCycleWindow = (overrides: Partial<CycleWindow> = {}): CycleWindow => ({
+  period: 7,
+  scale: 'meso',
+  confidence: 0.8,
+  lastObserved: '2026-04-23',
+  ...overrides,
+})
+
+const createInput = (overrides: Partial<PredictabilityInput>): PredictabilityInput => ({
+  targetDate: '2026-04-25',
+  domain: 'test',
+  horizon: 'medium',
+  objective: 'test',
+  historicalEvents: [],
+  trendWindows: [],
+  landmarkEvents: [],
+  behavioralPatterns: [],
+  cycleWindows: [],
+  ...overrides,
+})
+
 describe('predictability-kernel', () => {
   test('generates strong forecast when evidence is high quality', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'batman',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'booking_system',
       trendWindows: [
-        {
+        createTrendWindow({
+          id: 'booking-previous',
+          label: 'Booking turnaround previous',
           signalType: 'booking_turnaround',
-          timestamp: '2026-04-20',
+          start: '2026-04-20',
+          end: '2026-04-20',
           value: 0.5,
-          confidence: 0.85
-        },
-        {
+          confidence: 0.85,
+        }),
+        createTrendWindow({
+          id: 'booking-current',
+          label: 'Booking turnaround current',
           signalType: 'booking_turnaround',
-          timestamp: '2026-04-23',
+          start: '2026-04-23',
+          end: '2026-04-23',
           value: 0.8,
-          confidence: 0.9
-        }
+          confidence: 0.9,
+        })
       ],
       landmarkEvents: [
         {
@@ -55,13 +95,14 @@ describe('predictability-kernel', () => {
         }
       ],
       cycleWindows: [
-        {
+        createCycleWindow({
+          period: 7,
           scale: 'meso',
-          strength: 0.8,
-          alignmentWithObjective: 0.9
-        }
+          confidence: 0.9,
+          lastObserved: '2026-04-23',
+        })
       ]
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
@@ -71,24 +112,32 @@ describe('predictability-kernel', () => {
   })
 
   test('scaffold fixtures alone cannot create strong forecast', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'jarvis',
-      horizon: 'short_term',
+      horizon: 'short',
       objective: 'automation',
       trendWindows: [
-        {
+        createTrendWindow({
+          id: 'automation-previous',
+          label: 'Automation readiness previous',
           signalType: 'automation_readiness',
-          timestamp: '2026-04-20',
+          start: '2026-04-20',
+          end: '2026-04-20',
           value: 0.4,
-          confidence: 0.5
-        },
-        {
+          confidence: 0.5,
+          sourceTier: 'T3',
+        }),
+        createTrendWindow({
+          id: 'automation-current',
+          label: 'Automation readiness current',
           signalType: 'automation_readiness',
-          timestamp: '2026-04-23',
+          start: '2026-04-23',
+          end: '2026-04-23',
           value: 0.6,
-          confidence: 0.55
-        }
+          confidence: 0.55,
+          sourceTier: 'T3',
+        })
       ],
       landmarkEvents: [
         {
@@ -108,7 +157,7 @@ describe('predictability-kernel', () => {
       ],
       behavioralPatterns: [],
       cycleWindows: []
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
@@ -119,29 +168,35 @@ describe('predictability-kernel', () => {
   })
 
   test('reflects trend direction in supporting evidence', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'test_goal',
       trendWindows: [
-        {
+        createTrendWindow({
+          id: 'test-previous',
+          label: 'Test signal previous',
           signalType: 'test_signal',
-          timestamp: '2026-04-20',
+          start: '2026-04-20',
+          end: '2026-04-20',
           value: 0.2,
-          confidence: 0.8
-        },
-        {
+          confidence: 0.8,
+        }),
+        createTrendWindow({
+          id: 'test-current',
+          label: 'Test signal current',
           signalType: 'test_signal',
-          timestamp: '2026-04-23',
+          start: '2026-04-23',
+          end: '2026-04-23',
           value: 0.95,
-          confidence: 0.85
-        }
+          confidence: 0.85,
+        })
       ],
       landmarkEvents: [],
       behavioralPatterns: [],
       cycleWindows: []
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
@@ -149,27 +204,29 @@ describe('predictability-kernel', () => {
   })
 
   test('aligns cycle scoring to horizon', () => {
-    const microInput: PredictabilityInput = {
+    const microInput = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'short_term',
+      horizon: 'short',
       objective: 'test',
       trendWindows: [],
       landmarkEvents: [],
       behavioralPatterns: [],
       cycleWindows: [
-        {
+        createCycleWindow({
+          period: 1,
           scale: 'micro',
-          strength: 0.9,
-          alignmentWithObjective: 0.95
-        },
-        {
+          confidence: 0.95,
+          lastObserved: '2026-04-24',
+        }),
+        createCycleWindow({
+          period: 30,
           scale: 'macro',
-          strength: 0.6,
-          alignmentWithObjective: 0.7
-        }
+          confidence: 0.7,
+          lastObserved: '2026-04-24',
+        })
       ]
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(microInput)
 
@@ -177,29 +234,35 @@ describe('predictability-kernel', () => {
   })
 
   test('includes opposing evidence when patterns are weak', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'test',
       trendWindows: [
-        {
+        createTrendWindow({
+          id: 'falling-previous',
+          label: 'Falling signal previous',
           signalType: 'test_signal',
-          timestamp: '2026-04-20',
+          start: '2026-04-20',
+          end: '2026-04-20',
           value: 0.8,
-          confidence: 0.8
-        },
-        {
+          confidence: 0.8,
+        }),
+        createTrendWindow({
+          id: 'falling-current',
+          label: 'Falling signal current',
           signalType: 'test_signal',
-          timestamp: '2026-04-23',
+          start: '2026-04-23',
+          end: '2026-04-23',
           value: 0.1,
-          confidence: 0.8
-        }
+          confidence: 0.8,
+        })
       ],
       landmarkEvents: [],
       behavioralPatterns: [],
       cycleWindows: []
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
@@ -207,12 +270,15 @@ describe('predictability-kernel', () => {
   })
 
   test('maintains immutability of inputs', () => {
-    const originalTrend: TrendWindow = {
+    const originalTrend = createTrendWindow({
+      id: 'immutability-trend',
+      label: 'Immutability trend',
       signalType: 'test',
-      timestamp: '2026-04-20',
+      start: '2026-04-20',
+      end: '2026-04-20',
       value: 0.5,
-      confidence: 0.8
-    }
+      confidence: 0.8,
+    })
     const originalBehavior: BehavioralPattern = {
       id: 'b1',
       actorScope: 'organization',
@@ -230,16 +296,16 @@ describe('predictability-kernel', () => {
     const trendClone = JSON.parse(JSON.stringify(originalTrend))
     const behaviorClone = JSON.parse(JSON.stringify(originalBehavior))
 
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'test',
-      trendWindows: [trendClone, { ...trendClone, timestamp: '2026-04-23', value: 0.7 }],
+      trendWindows: [trendClone, { ...trendClone, id: 'immutability-current', start: '2026-04-23', end: '2026-04-23', value: 0.7 }],
       landmarkEvents: [],
       behavioralPatterns: [behaviorClone],
       cycleWindows: []
-    }
+    })
 
     calculatePredictabilityForecast(input)
 
@@ -248,16 +314,16 @@ describe('predictability-kernel', () => {
   })
 
   test('does not perform database, API, or filesystem operations', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'test',
       trendWindows: [],
       landmarkEvents: [],
       behavioralPatterns: [],
       cycleWindows: []
-    }
+    })
 
     expect(() => {
       calculatePredictabilityForecast(input)
@@ -265,16 +331,16 @@ describe('predictability-kernel', () => {
   })
 
   test('warns when evidence count is low', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'test',
       trendWindows: [],
       landmarkEvents: [],
       behavioralPatterns: [],
       cycleWindows: []
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
@@ -282,10 +348,10 @@ describe('predictability-kernel', () => {
   })
 
   test('includes behavioral signals in output', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'batman',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'booking',
       trendWindows: [],
       landmarkEvents: [],
@@ -305,7 +371,7 @@ describe('predictability-kernel', () => {
         }
       ],
       cycleWindows: []
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
@@ -314,16 +380,16 @@ describe('predictability-kernel', () => {
   })
 
   test('includes assumptions in output', () => {
-    const input: PredictabilityInput = {
+    const input = createInput({
       targetDate: '2026-04-25',
       domain: 'test',
-      horizon: 'medium_term',
+      horizon: 'medium',
       objective: 'test',
       trendWindows: [],
       landmarkEvents: [],
       behavioralPatterns: [],
       cycleWindows: []
-    }
+    })
 
     const forecast = calculatePredictabilityForecast(input)
 
