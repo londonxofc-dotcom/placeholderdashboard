@@ -66,7 +66,13 @@ Run after backend is reachable:
 
 ## Open Questions
 
-1. TBD
+1. Which backend host should run FastAPI and `/ready`?
+2. Which frontend host should serve the cockpit?
+3. Which managed Postgres provider should own production data?
+4. Where should production secrets live?
+5. What exact cockpit origins should be allowed by CORS?
+6. Should the first deployed cockpit be local-only, private authenticated, or public?
+7. What initial Anthropic spend cap should govern real missions?
 
 ## Decision Log
 
