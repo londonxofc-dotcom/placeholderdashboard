@@ -86,7 +86,7 @@ Backend:
 | `DATABASE_URL` | Yes for DB-backed runtime | Defaults to local Postgres URL in code |
 | `SQL_ECHO` | No | SQL logging toggle |
 | `ANTHROPIC_API_KEY` | Yes for real missions | Needed by Claude-backed decomposition/review paths |
-| `ALLOWED_ORIGINS` | Production yes | Comma-separated CORS allow-list; whitespace is trimmed and empty entries are ignored |
+| `ALLOWED_ORIGINS` | Production yes | Comma-separated exact HTTP(S) origins; whitespace is trimmed and empty entries are ignored |
 
 Frontend:
 
@@ -148,8 +148,9 @@ Check deployment environment readiness without printing secret values:
 This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing, and
 rejects wildcard `ALLOWED_ORIGINS` in production mode. It also requires
-`NEXT_PUBLIC_API_URL` to point at the backend API prefix ending in `/api`, not
-only the backend base URL.
+`ALLOWED_ORIGINS` entries to be exact HTTP(S) origins and
+`NEXT_PUBLIC_API_URL` to be an HTTP(S) URL pointing at the backend API prefix
+ending in `/api`, not only the backend base URL.
 
 At runtime, wildcard CORS entries are ignored. If no exact origins remain, the
 backend falls back to local cockpit development origin `http://localhost:3000`.

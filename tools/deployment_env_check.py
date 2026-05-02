@@ -53,7 +53,9 @@ def is_valid_production_value(name: str, value: str | None) -> bool:
     if value is None:
         return True
     if name == "NEXT_PUBLIC_API_URL":
-        return has_api_path(value)
+        return is_http_url(value) and has_api_path(value)
+    if name == "ALLOWED_ORIGINS":
+        return allowed_origins_are_valid(value)
     invalid_values = INVALID_PRODUCTION_VALUES.get(name, set())
     normalized_values = {
         item.strip().lower()
@@ -67,6 +69,28 @@ def has_api_path(value: str) -> bool:
     parsed = urlparse(value)
     path_parts = [part for part in parsed.path.split("/") if part]
     return bool(path_parts) and path_parts[-1] == "api"
+
+
+def is_http_url(value: str) -> bool:
+    parsed = urlparse(value)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def is_origin(value: str) -> bool:
+    parsed = urlparse(value)
+    return (
+        parsed.scheme in {"http", "https"}
+        and bool(parsed.netloc)
+        and parsed.path in {"", "/"}
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+    )
+
+
+def allowed_origins_are_valid(value: str) -> bool:
+    origins = [item.strip() for item in value.split(",") if item.strip()]
+    return bool(origins) and all(is_origin(origin) for origin in origins)
 
 
 def check_environment(

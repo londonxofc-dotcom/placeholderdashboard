@@ -58,6 +58,46 @@ def test_production_profile_rejects_wildcard_allowed_origins():
     assert deployment_env_check.has_blockers(rows) is True
 
 
+def test_production_profile_rejects_malformed_allowed_origins():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://example",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com/path",
+            "NEXT_PUBLIC_API_URL": "https://backend.example.com/api",
+        },
+        production=True,
+    )
+
+    assert rows[2] == {
+        "name": "ALLOWED_ORIGINS",
+        "status": "invalid",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_production_profile_accepts_comma_separated_exact_origins():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://example",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": (
+                "https://cockpit.example.com, http://localhost:3000"
+            ),
+            "NEXT_PUBLIC_API_URL": "https://backend.example.com/api",
+        },
+        production=True,
+    )
+
+    assert rows[2] == {
+        "name": "ALLOWED_ORIGINS",
+        "status": "ok",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is False
+
+
 def test_local_profile_does_not_reject_wildcard_allowed_origins():
     rows = deployment_env_check.check_environment(
         {
@@ -92,6 +132,25 @@ def test_production_profile_requires_next_public_api_url_path():
         {"name": "ALLOWED_ORIGINS", "status": "ok", "required": "yes"},
         {"name": "NEXT_PUBLIC_API_URL", "status": "invalid", "required": "yes"},
     ]
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_production_profile_requires_next_public_api_url_http_url():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://example",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com",
+            "NEXT_PUBLIC_API_URL": "backend.example.com/api",
+        },
+        production=True,
+    )
+
+    assert rows[3] == {
+        "name": "NEXT_PUBLIC_API_URL",
+        "status": "invalid",
+        "required": "yes",
+    }
     assert deployment_env_check.has_blockers(rows) is True
 
 
