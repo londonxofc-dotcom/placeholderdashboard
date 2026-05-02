@@ -83,7 +83,7 @@ Backend:
 | `HOST` | No | Defaults to `0.0.0.0` for local run commands |
 | `PORT` | No | Defaults to `8000` |
 | `ENV` | No | `dev` enables uvicorn reload in direct main execution |
-| `DATABASE_URL` | Yes for DB-backed runtime | Defaults to local Postgres URL in code |
+| `DATABASE_URL` | Yes for DB-backed runtime | Must be a PostgreSQL URL; defaults to local Postgres URL in code |
 | `SQL_ECHO` | No | SQL logging toggle |
 | `ANTHROPIC_API_KEY` | Yes for real missions | Needed by Claude-backed decomposition/review paths |
 | `ALLOWED_ORIGINS` | Production yes | Comma-separated exact HTTP(S) origins; whitespace is trimmed and empty entries are ignored |
@@ -148,7 +148,7 @@ Check deployment environment readiness without printing secret values:
 This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing, and
 rejects wildcard `ALLOWED_ORIGINS` in production mode. It also requires
-`ALLOWED_ORIGINS` entries to be exact HTTP(S) origins and
+`DATABASE_URL` to be a PostgreSQL URL, `ALLOWED_ORIGINS` entries to be exact HTTP(S) origins, and
 `NEXT_PUBLIC_API_URL` to be an HTTP(S) URL pointing at the backend API prefix
 ending in `/api`, not only the backend base URL.
 

@@ -45,6 +45,7 @@ Before enabling real missions, confirm:
 - `/health` returns `ok`.
 - `/status` returns `ok` and reports the expected phase.
 - `/ready` returns `ready`.
+- `DATABASE_URL` is a PostgreSQL URL managed by the deployment host or database provider.
 - `ALLOWED_ORIGINS` contains only exact HTTP(S) cockpit origins, never `*`.
 - `NEXT_PUBLIC_API_URL` is an HTTP(S) backend API URL ending in `/api`.
 - `ANTHROPIC_API_KEY` is configured through the deployment host or secret

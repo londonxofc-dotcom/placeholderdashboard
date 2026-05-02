@@ -32,6 +32,44 @@ def test_production_profile_requires_deployment_variables():
     assert deployment_env_check.has_blockers(rows) is True
 
 
+def test_production_profile_rejects_malformed_database_url():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "not-a-url",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com",
+            "NEXT_PUBLIC_API_URL": "https://backend.example.com/api",
+        },
+        production=True,
+    )
+
+    assert rows[0] == {
+        "name": "DATABASE_URL",
+        "status": "invalid",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_production_profile_accepts_postgres_database_url():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://user:pass@db.example.com/app",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com",
+            "NEXT_PUBLIC_API_URL": "https://backend.example.com/api",
+        },
+        production=True,
+    )
+
+    assert rows[0] == {
+        "name": "DATABASE_URL",
+        "status": "ok",
+        "required": "yes",
+    }
+    assert deployment_env_check.has_blockers(rows) is False
+
+
 def test_placeholder_values_are_treated_as_missing():
     assert deployment_env_check.is_configured("your-api-key-here") is False
     assert deployment_env_check.is_configured(" placeholder ") is False
