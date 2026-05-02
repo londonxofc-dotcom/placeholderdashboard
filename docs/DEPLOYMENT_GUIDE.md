@@ -91,7 +91,13 @@ Frontend:
 
 ## Verification Before Any Deployment
 
-Run:
+Run the combined local preflight:
+
+```bash
+.venv/bin/python tools/deployment_preflight.py
+```
+
+Or run the checks directly:
 
 ```bash
 .venv/bin/python -m pytest tests/ -v
@@ -101,6 +107,8 @@ npm --prefix ui test
 ```
 
 If UI build touches `ui/next-env.d.ts`, restore it unless that generated file is intentionally in scope.
+
+`tools/deployment_preflight.py` fails if `ui/next-env.d.ts` changes during the UI build, so generated churn is caught before commit.
 
 For backend deployment probes, also verify:
 
