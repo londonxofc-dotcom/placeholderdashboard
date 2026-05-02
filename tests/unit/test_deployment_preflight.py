@@ -141,6 +141,47 @@ def test_main_reports_generated_churn(monkeypatch, capsys):
     assert "ui/next-env.d.ts" in stderr
 
 
+def test_main_can_restore_generated_ui_types_after_verification(monkeypatch, capsys):
+    calls: list[str] = []
+    restored: list[str] = []
+    state = {"status": " M ui/next-env.d.ts", "checks": 0}
+
+    def fake_run_step(step):
+        calls.append(step.name)
+        return 0
+
+    def fake_protected_file_status():
+        state["checks"] += 1
+        if state["checks"] == 1:
+            return ""
+        return state["status"]
+
+    def fake_restore_generated_ui_types():
+        restored.append("ui/next-env.d.ts")
+        state["status"] = ""
+
+    monkeypatch.setattr(deployment_preflight, "run_step", fake_run_step)
+    monkeypatch.setattr(
+        deployment_preflight,
+        "protected_file_status",
+        fake_protected_file_status,
+    )
+    monkeypatch.setattr(
+        deployment_preflight,
+        "restore_generated_ui_types",
+        fake_restore_generated_ui_types,
+    )
+
+    code = deployment_preflight.main(
+        ["--ui-only", "--restore-generated-ui-types"]
+    )
+
+    assert code == 0
+    assert calls == ["ui typecheck", "ui build", "ui tests"]
+    assert restored == ["ui/next-env.d.ts"]
+    assert "Preflight passed" in capsys.readouterr().out
+
+
 def test_main_fails_fast_when_protected_files_are_dirty(monkeypatch, capsys):
     calls: list[str] = []
 

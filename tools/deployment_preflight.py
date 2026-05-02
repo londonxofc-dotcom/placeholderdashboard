@@ -121,6 +121,14 @@ def report_protected_file_churn(status: str) -> None:
     print(status, file=sys.stderr)
 
 
+def restore_generated_ui_types() -> None:
+    subprocess.run(
+        ("git", "restore", "--", "ui/next-env.d.ts"),
+        cwd=ROOT,
+        check=False,
+    )
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run Mission Control local deployment preflight checks."
@@ -165,6 +173,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Allow /ready to report degraded during the probe check.",
     )
+    parser.add_argument(
+        "--restore-generated-ui-types",
+        action="store_true",
+        help="Restore generated ui/next-env.d.ts churn after verification.",
+    )
     return parser.parse_args(argv)
 
 
@@ -197,6 +210,9 @@ def main(argv: list[str] | None = None) -> int:
         if code != 0:
             print(f"\nPreflight failed at: {step.name}", file=sys.stderr)
             return code
+
+    if args.restore_generated_ui_types:
+        restore_generated_ui_types()
 
     protected_status = protected_file_status()
     if protected_status:

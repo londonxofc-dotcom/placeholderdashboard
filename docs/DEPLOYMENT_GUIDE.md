@@ -102,6 +102,12 @@ Run the combined local preflight:
 .venv/bin/python tools/deployment_preflight.py
 ```
 
+If the only expected post-build churn is generated `ui/next-env.d.ts`, use:
+
+```bash
+.venv/bin/python tools/deployment_preflight.py --restore-generated-ui-types
+```
+
 For launch-gate verification, include the deployment decision record check:
 
 ```bash
@@ -136,7 +142,7 @@ npm --prefix ui test
 
 If UI build touches `ui/next-env.d.ts`, restore it unless that generated file is intentionally in scope.
 
-`tools/deployment_preflight.py` fails if `ui/next-env.d.ts` changes during the UI build, so generated churn is caught before commit.
+`tools/deployment_preflight.py` fails if `ui/next-env.d.ts` changes during the UI build, so generated churn is caught before commit. Use `--restore-generated-ui-types` when you want the runner to restore that generated file automatically after verification.
 
 The preflight also checks protected tracked files before and after verification. If `current.md` or `ui/next-env.d.ts` is already dirty, or becomes dirty during verification, the run fails until that churn is restored or intentionally scoped.
 
