@@ -12,7 +12,7 @@ Phase 4 is not blank. Core service contracts are already tracked and passing, wi
 | Role registry tests | Passing | `tests/unit/test_phase4_role_registry.py` |
 | ABAC role layer | Contract extension landed | `backend/services/abac_enforcer.py` |
 | ABAC role-layer tests | Passing | `tests/unit/test_phase4_abac_enforcer.py` |
-| Runtime memory isolation wiring | Partial | `ExecutorAgent` writes through `MemoryIsolationService`; future read paths still need review |
+| Runtime memory isolation wiring | Known paths landed | `ExecutorAgent`, `BatmanGraph`, and `ToolWrapper` task result writes use `MemoryIsolationService`; runtime reads are mission-scoped by mission ID |
 | Runtime actor-role propagation | Batman path landed | API mission state, `BatmanSupervisor`, and `BatmanGraph` pass `actor_roles` into ABAC enforcement |
 | Tool/role vocabulary alignment | Landed | Reviewer-allowed safe tools exist in `ToolService`; role registry grants matching names while preserving aliases |
 | Multi-approver chains | Not started | Still needs approval-flow design |
@@ -26,6 +26,7 @@ Commands run on 2026-05-02:
 .venv/bin/python -m pytest tests/unit/test_phase4_memory_isolation.py tests/unit/test_phase4_role_registry.py tests/unit/test_phase4_abac_enforcer.py -v
 .venv/bin/python -m pytest tests/unit/test_mission_abac_policy.py tests/unit/test_batman_graph_phase2.py tests/integration/test_phase2_cockpit_smoke.py -v
 .venv/bin/python -m pytest tests/unit/test_tool_service.py tests/unit/test_phase4_role_registry.py tests/unit/test_mission_abac_policy.py -v
+.venv/bin/python -m pytest tests/unit/test_batman_graph.py tests/unit/test_tool_wrapper.py -v
 .venv/bin/python -m pytest tests/ -v
 npm --prefix ui run typecheck
 npm --prefix ui run build
@@ -39,7 +40,8 @@ Results:
 | Phase 4 targeted backend tests | 40 passed |
 | Actor-role propagation targeted backend tests | 17 passed |
 | Tool/role vocabulary targeted backend tests | 29 passed |
-| Full backend tests | 214 passed |
+| Memory boundary targeted backend tests | 15 passed |
+| Full backend tests | 216 passed |
 | UI typecheck | passed |
 | UI build | passed |
 | Full UI tests | 43 files / 1265 tests passed |
@@ -54,10 +56,12 @@ Follow-up commit `10d8ad1` wired mission-scoped `actor_roles` through the Batman
 
 Follow-up commit `47a4731` aligned the safe mocked tool vocabulary across ReviewGate defaults, `ToolService`, and `RoleRegistry`. Reviewer-approved safe tools now have ToolService definitions, and operator/agent role checks recognize canonical tool names such as `read_file` while preserving older aliases such as `file_read`.
 
+Follow-up commit `605e221` completed the known task-result memory write boundary by routing `BatmanGraph` and `ToolWrapper` writes through `MemoryIsolationService`. The read-path audit found runtime memory display endpoints already read through mission-scoped `list_memory(mission_id)` calls; no cross-mission read path is currently wired.
+
 The correct state is:
 
 - Phase 4 service contracts: partially complete.
-- Phase 4 runtime integration: partial. Executor writes now use the isolation boundary; Batman actor-role propagation now reaches ABAC enforcement; safe tool vocabulary is aligned; future cross-mission read paths still need review.
+- Phase 4 runtime integration: partial. Known task-result write paths use the isolation boundary; Batman actor-role propagation now reaches ABAC enforcement; safe tool vocabulary is aligned.
 - Phase 4 docs/planning: now reconciled by this document.
 
 ## Next Implementation Gate
@@ -67,6 +71,7 @@ Completed gates:
 - Phase 4 runtime memory isolation wiring for executor writes.
 - Phase 4 Batman actor-role propagation into ABAC enforcement.
 - Phase 4 tool/role vocabulary alignment.
+- Phase 4 memory read-path audit and graph/tool-wrapper write boundary.
 
 Implemented scope:
 
@@ -84,13 +89,15 @@ Implemented scope:
 - `backend/services/role_registry.py`
 - `tests/unit/test_phase4_role_registry.py`
 - `tests/unit/test_tool_service.py`
+- `backend/agents/tool_wrapper.py`
+- `tests/unit/test_tool_wrapper.py`
 
-Next recommended gate: Phase 4 memory read-path audit.
+Next recommended gate: Phase 4 multi-approver chain scoping.
 
 Allowed scope for that next gate should be limited to:
 
-- finding all supervisor/API memory read paths
-- deciding whether each read path already stays mission-scoped or must route through `MemoryIsolationService`
-- targeted tests for any read path that needs enforcement
+- approval data model and route semantics for multiple approvers
+- tests for all-required vs threshold approval decisions once the flow is chosen
+- no Resonance OS integration and no external production side effects
 
-Do not combine that with multi-approver chains or Resonance OS integration. Those should remain separate gates.
+Do not combine that with Resonance OS integration. That should remain a separate gate.

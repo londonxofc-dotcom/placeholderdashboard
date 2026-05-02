@@ -1,10 +1,10 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 4 reconciliation → integration wiring next
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅.
 **Active Worktrees:** none
 **Blockers:** none
-**Next Approval Gate:** Phase 4 memory read-path audit, then multi-approver chain scoping
+**Next Approval Gate:** Phase 4 multi-approver chain scoping
 **Session State:** see `current.md` (16D shell — read on session open)
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
@@ -112,11 +112,11 @@
 ## Phase 4 — Memory Scoping & ABAC (Weeks 11–12) — PARTIAL / RECONCILED
 - [x] Storage-level memory isolation contract — `backend/services/memory_isolation.py` + `tests/unit/test_phase4_memory_isolation.py` (`f153c43`)
 - [x] Executor memory writes route through `MemoryIsolationService` — `backend/agents/executor.py` + `tests/unit/test_executor.py` (`ad138bc`)
+- [x] BatmanGraph and ToolWrapper task result writes route through `MemoryIsolationService`; runtime read paths audit clean/missional — `backend/agents/batman_graph.py`, `backend/agents/tool_wrapper.py`, `tests/unit/test_batman_graph.py`, `tests/unit/test_tool_wrapper.py` (`605e221`)
 - [x] Role registry and role-based tool permissions — `backend/services/role_registry.py` + `tests/unit/test_phase4_role_registry.py` (`f153c43`)
 - [x] ABACEnforcer role-layer extension remains backward-compatible — `tests/unit/test_phase4_abac_enforcer.py` (`f153c43`)
 - [x] Batman actor roles propagate through API mission state, `BatmanSupervisor`, and `BatmanGraph` into ABAC enforcement — `backend/api/schemas.py`, `backend/api/routes.py`, `backend/agents/supervisor.py`, `backend/agents/batman_graph.py` (`10d8ad1`)
 - [x] `ToolService` registry aligns with reviewer defaults and role registry vocabulary for safe mocked tools — `backend/services/tool_service.py`, `backend/services/role_registry.py`, `tests/unit/test_tool_service.py` (`47a4731`)
-- [ ] Audit whether additional supervisor/API memory reads require `MemoryIsolationService`; no cross-mission read path is currently wired.
 - [ ] Multi-approver chain — still deferred / needs concrete approval flow.
 - [ ] Resonance OS integration scoping — still not specced.
 
@@ -146,5 +146,5 @@
 
 ---
 
-**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Phase 4 vocabulary alignment complete)
+**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Phase 4 memory boundary audit complete)
 **Maintained By:** Mission Architect Agent
