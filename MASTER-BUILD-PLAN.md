@@ -1,7 +1,7 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 5 docs/polish (Resonance OS implementation blocked pending source/surface decision)
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅, cockpit idle-polling optimization ✅, backend readiness probe ✅, required credential readiness check ✅, local deployment preflight ✅, CORS origin normalization ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅, cockpit idle-polling optimization ✅, backend readiness probe ✅, required credential readiness check ✅, local deployment preflight ✅, CORS origin normalization ✅, protected-file preflight guard ✅.
 **Active Worktrees:** none
 **Blockers:** Resonance OS source/surface decision needed before implementation
 **Next Approval Gate:** Phase 5 performance/deployment target decision, or Resonance OS source/surface decision
@@ -130,6 +130,7 @@
 - [x] Backend liveness/readiness probes and required credential check for deployment monitoring — `backend/main.py`, `tests/unit/test_backend_health.py`
 - [x] Local deployment preflight runner catches backend/UI verification and generated UI churn — `tools/deployment_preflight.py`, `tests/unit/test_deployment_preflight.py`
 - [x] Production CORS origin parsing trims whitespace and ignores empty entries — `backend/main.py`, `tests/unit/test_backend_health.py`
+- [x] Deployment preflight fails fast on protected tracked-file churn — `current.md`, `ui/next-env.d.ts`
 - [ ] Performance optimization
 - [ ] Deployment + monitoring
 

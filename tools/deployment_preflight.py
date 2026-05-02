@@ -15,6 +15,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PROTECTED_TRACKED_FILES = ("current.md", "ui/next-env.d.ts")
 
 
 @dataclass(frozen=True)
@@ -78,6 +79,19 @@ def git_status_for(paths: list[str]) -> str:
     return completed.stdout.strip()
 
 
+def protected_file_status() -> str:
+    return git_status_for(list(PROTECTED_TRACKED_FILES))
+
+
+def report_protected_file_churn(status: str) -> None:
+    print(
+        "\nPreflight failed: protected tracked files are dirty. "
+        "Restore or intentionally scope them before deployment verification.",
+        file=sys.stderr,
+    )
+    print(status, file=sys.stderr)
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run Mission Control local deployment preflight checks."
@@ -114,22 +128,21 @@ def main(argv: list[str] | None = None) -> int:
         skip_ui_build=args.skip_ui_build,
     )
 
+    protected_status = protected_file_status()
+    if protected_status:
+        report_protected_file_churn(protected_status)
+        return 1
+
     for step in steps:
         code = run_step(step)
         if code != 0:
             print(f"\nPreflight failed at: {step.name}", file=sys.stderr)
             return code
 
-    if include_ui and not args.skip_ui_build:
-        churn = git_status_for(["ui/next-env.d.ts"])
-        if churn:
-            print(
-                "\nPreflight failed: ui/next-env.d.ts changed during build. "
-                "Restore generated churn before committing.",
-                file=sys.stderr,
-            )
-            print(churn, file=sys.stderr)
-            return 1
+    protected_status = protected_file_status()
+    if protected_status:
+        report_protected_file_churn(protected_status)
+        return 1
 
     print("\nPreflight passed.")
     return 0

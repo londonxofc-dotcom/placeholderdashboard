@@ -47,17 +47,41 @@ def test_main_reports_generated_churn(monkeypatch, capsys):
         return 0
 
     monkeypatch.setattr(deployment_preflight, "run_step", fake_run_step)
+    statuses = iter(["", " M ui/next-env.d.ts"])
     monkeypatch.setattr(
         deployment_preflight,
-        "git_status_for",
-        lambda paths: " M ui/next-env.d.ts",
+        "protected_file_status",
+        lambda: next(statuses),
     )
 
     code = deployment_preflight.main(["--ui-only"])
 
     assert code == 1
     assert calls == ["ui typecheck", "ui build", "ui tests"]
-    assert "ui/next-env.d.ts changed" in capsys.readouterr().err
+    stderr = capsys.readouterr().err
+    assert "protected tracked files are dirty" in stderr
+    assert "ui/next-env.d.ts" in stderr
+
+
+def test_main_fails_fast_when_protected_files_are_dirty(monkeypatch, capsys):
+    calls: list[str] = []
+
+    def fake_run_step(step):
+        calls.append(step.name)
+        return 0
+
+    monkeypatch.setattr(deployment_preflight, "run_step", fake_run_step)
+    monkeypatch.setattr(
+        deployment_preflight,
+        "protected_file_status",
+        lambda: " M current.md",
+    )
+
+    code = deployment_preflight.main(["--backend-only"])
+
+    assert code == 1
+    assert calls == []
+    assert "protected tracked files are dirty" in capsys.readouterr().err
 
 
 def test_main_passes_when_selected_steps_pass(monkeypatch, capsys):
@@ -68,7 +92,7 @@ def test_main_passes_when_selected_steps_pass(monkeypatch, capsys):
         return 0
 
     monkeypatch.setattr(deployment_preflight, "run_step", fake_run_step)
-    monkeypatch.setattr(deployment_preflight, "git_status_for", lambda paths: "")
+    monkeypatch.setattr(deployment_preflight, "protected_file_status", lambda: "")
 
     code = deployment_preflight.main(["--backend-only"])
 

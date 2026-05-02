@@ -110,6 +110,8 @@ If UI build touches `ui/next-env.d.ts`, restore it unless that generated file is
 
 `tools/deployment_preflight.py` fails if `ui/next-env.d.ts` changes during the UI build, so generated churn is caught before commit.
 
+The preflight also checks protected tracked files before and after verification. If `current.md` or `ui/next-env.d.ts` is already dirty, or becomes dirty during verification, the run fails until that churn is restored or intentionally scoped.
+
 For backend deployment probes, also verify:
 
 ```bash
