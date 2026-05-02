@@ -173,12 +173,12 @@ After a backend is running locally or on a host, check the public probes:
 .venv/bin/python tools/deployment_probe_check.py --base-url http://localhost:8000
 ```
 
-Use the deployed backend base URL for production. The base URL should not
-include `/api`; the checker calls `/health`, `/status`, and `/ready`, and
-fails fast if `/api` is included in the base URL path. It also verifies the
-expected JSON status values: `/health` and `/status` must report `ok`, and
-`/ready` must report `ready`. The printed verdict uses the same policy as the
-exit code.
+Use the deployed backend base URL for production. The base URL must be an
+HTTP(S) URL and should not include `/api`; the checker calls `/health`,
+`/status`, and `/ready`, and fails fast if the URL is malformed or if `/api` is
+included in the base URL path. It also verifies the expected JSON status
+values: `/health` and `/status` must report `ok`, and `/ready` must report
+`ready`. The printed verdict uses the same policy as the exit code.
 
 Before all production dependencies are configured, use pre-launch reachability
 mode to allow `/ready` to report `degraded` while still requiring `/health` and

@@ -39,6 +39,20 @@ def test_has_api_path_detects_api_segment():
     assert deployment_probe_check.has_api_path("https://example.com/capitol") is False
 
 
+def test_is_http_base_url_requires_absolute_http_url_without_query():
+    assert deployment_probe_check.is_http_base_url(
+        "https://api.example.com"
+    ) is True
+    assert deployment_probe_check.is_http_base_url(
+        "http://localhost:8000/service"
+    ) is True
+    assert deployment_probe_check.is_http_base_url("api.example.com") is False
+    assert deployment_probe_check.is_http_base_url("ftp://api.example.com") is False
+    assert deployment_probe_check.is_http_base_url(
+        "https://api.example.com?token=secret"
+    ) is False
+
+
 def test_probe_url_reports_ok_json_status():
     def opener(url, timeout):
         assert url == "https://api.example.com/health"
@@ -249,7 +263,24 @@ def test_main_rejects_base_url_with_api_path(monkeypatch, capsys):
 
     assert code == 2
     assert calls == []
-    assert "without /api" in capsys.readouterr().err
+    assert "HTTP(S) base URL without /api" in capsys.readouterr().err
+
+
+def test_main_rejects_malformed_base_url(monkeypatch, capsys):
+    calls: list[str] = []
+    monkeypatch.setattr(
+        deployment_probe_check,
+        "run_probes",
+        lambda base_url, timeout: calls.append(base_url),
+    )
+
+    code = deployment_probe_check.main(
+        ["--base-url", "api.example.com"]
+    )
+
+    assert code == 2
+    assert calls == []
+    assert "HTTP(S) base URL without /api" in capsys.readouterr().err
 
 
 def test_main_returns_success_when_all_probes_pass(monkeypatch):

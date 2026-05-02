@@ -41,6 +41,17 @@ def has_api_path(base_url: str) -> bool:
     return "api" in path_parts
 
 
+def is_http_base_url(base_url: str) -> bool:
+    parsed = urlparse(base_url)
+    return (
+        parsed.scheme in {"http", "https"}
+        and bool(parsed.netloc)
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+    )
+
+
 def probe_url(
     base_url: str,
     path: str,
@@ -166,10 +177,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    if has_api_path(args.base_url):
+    if not is_http_base_url(args.base_url) or has_api_path(args.base_url):
         print(
             "Deployment probe check failed: --base-url must be the backend "
-            "base URL without /api.",
+            "HTTP(S) base URL without /api.",
             file=sys.stderr,
         )
         return 2
