@@ -68,7 +68,11 @@ async def readiness_check():
     checked_at = datetime.now(timezone.utc).isoformat()
     env_name = os.getenv("ENV", "dev")
     database = _check_database()
-    ready = database["status"] == "ok"
+    anthropic_api_key = _check_required_secret("ANTHROPIC_API_KEY")
+    ready = (
+        database["status"] == "ok"
+        and anthropic_api_key["status"] == "ok"
+    )
 
     payload = {
         "status": "ready" if ready else "degraded",
@@ -78,6 +82,7 @@ async def readiness_check():
         "checked_at": checked_at,
         "checks": {
             "database": database,
+            "anthropic_api_key": anthropic_api_key,
             "api_router": {"status": "ok", "prefix": "/api"},
         },
     }
@@ -95,6 +100,15 @@ def _check_database() -> dict[str, str]:
             "message": exc.__class__.__name__,
         }
     return {"status": "ok"}
+
+
+def _check_required_secret(name: str) -> dict[str, str]:
+    if os.getenv(name):
+        return {"status": "ok"}
+    return {
+        "status": "missing",
+        "message": f"{name} is not configured",
+    }
 
 # Documentation
 @app.get("/")

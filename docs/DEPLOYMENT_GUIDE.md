@@ -59,8 +59,9 @@ curl http://localhost:8000/ready
 ```
 
 `/health` is a lightweight liveness probe. `/ready` checks deployment readiness
-and returns dependency status for the API router and database without exposing
-connection strings, secrets, or raw exception text.
+and returns dependency status for the API router, database, and required
+Claude credential presence without exposing connection strings, secret values,
+or raw exception text.
 
 Start UI:
 
@@ -128,6 +129,8 @@ Conservative first pass:
 - Secrets only in host environment settings.
 - CORS locked to the deployed cockpit URL.
 - Backend host readiness probe pointed at `/ready`; liveness probe pointed at `/health`.
+- `/ready` must return `status: ready` before real missions are enabled; `status: degraded`
+  means the host is reachable but a dependency or required credential is missing.
 - No real external music/label integrations until a workflow-specific gate is approved.
 
 ## Non-Goals

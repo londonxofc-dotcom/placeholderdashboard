@@ -41,7 +41,9 @@ async def test_ready_reports_ready_when_database_check_passes():
     connect.return_value.__exit__.return_value = False
 
     with patch("backend.main.engine.connect", connect), patch.dict(
-        "os.environ", {"ENV": "test"}, clear=False
+        "os.environ",
+        {"ENV": "test", "ANTHROPIC_API_KEY": "test-key"},
+        clear=False,
     ):
         transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
@@ -52,6 +54,7 @@ async def test_ready_reports_ready_when_database_check_passes():
     assert body["status"] == "ready"
     assert body["environment"] == "test"
     assert body["checks"]["database"] == {"status": "ok"}
+    assert body["checks"]["anthropic_api_key"] == {"status": "ok"}
     assert body["checks"]["api_router"] == {"status": "ok", "prefix": "/api"}
     assert body["phase"] == "Phase 5 - Polish & Launch"
     assert "checked_at" in body
@@ -74,4 +77,29 @@ async def test_ready_reports_degraded_without_leaking_database_details():
         "status": "error",
         "message": "RuntimeError",
     }
+    assert body["checks"]["anthropic_api_key"]["status"] in {"ok", "missing"}
     assert "secret" not in str(body).lower()
+
+
+async def test_ready_reports_degraded_when_anthropic_key_is_missing():
+    app = _get_app()
+    connection = MagicMock()
+    connect = MagicMock()
+    connect.return_value.__enter__.return_value = connection
+    connect.return_value.__exit__.return_value = False
+
+    with patch("backend.main.engine.connect", connect), patch.dict(
+        "os.environ", {"ANTHROPIC_API_KEY": ""}, clear=False
+    ):
+        transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/ready")
+
+    assert resp.status_code == 503
+    body = resp.json()
+    assert body["status"] == "degraded"
+    assert body["checks"]["database"] == {"status": "ok"}
+    assert body["checks"]["anthropic_api_key"] == {
+        "status": "missing",
+        "message": "ANTHROPIC_API_KEY is not configured",
+    }
