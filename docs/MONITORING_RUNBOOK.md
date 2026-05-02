@@ -41,7 +41,7 @@ Before enabling real missions, confirm:
 - `/health` returns `ok`.
 - `/status` returns `ok` and reports the expected phase.
 - `/ready` returns `ready`.
-- `ALLOWED_ORIGINS` contains only exact cockpit origins.
+- `ALLOWED_ORIGINS` contains only exact cockpit origins, never `*`.
 - `ANTHROPIC_API_KEY` is configured through the deployment host or secret
   manager, never committed.
 - The first production access model is recorded in

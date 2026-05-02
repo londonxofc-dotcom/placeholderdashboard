@@ -26,6 +26,11 @@ class EnvRequirement:
     allow_placeholder: bool = False
 
 
+INVALID_PRODUCTION_VALUES = {
+    "ALLOWED_ORIGINS": {"*"},
+}
+
+
 REQUIREMENTS = (
     EnvRequirement("DATABASE_URL", production_required=True, local_required=True),
     EnvRequirement("ANTHROPIC_API_KEY", production_required=True),
@@ -41,6 +46,18 @@ def is_configured(value: str | None, *, allow_placeholder: bool = False) -> bool
     if allow_placeholder:
         return bool(normalized)
     return normalized.lower() not in PLACEHOLDER_VALUES
+
+
+def is_valid_production_value(name: str, value: str | None) -> bool:
+    if value is None:
+        return True
+    invalid_values = INVALID_PRODUCTION_VALUES.get(name, set())
+    normalized_values = {
+        item.strip().lower()
+        for item in value.split(",")
+        if item.strip()
+    }
+    return normalized_values.isdisjoint(invalid_values)
 
 
 def check_environment(
@@ -59,7 +76,12 @@ def check_environment(
             env.get(requirement.name),
             allow_placeholder=requirement.allow_placeholder,
         )
-        if configured:
+        if configured and production and not is_valid_production_value(
+            requirement.name,
+            env.get(requirement.name),
+        ):
+            status = "invalid"
+        elif configured:
             status = "ok"
         elif required:
             status = "missing"
@@ -76,7 +98,7 @@ def check_environment(
 
 
 def has_blockers(rows: list[dict[str, str]]) -> bool:
-    return any(row["status"] == "missing" for row in rows)
+    return any(row["status"] in {"missing", "invalid"} for row in rows)
 
 
 def render_report(rows: list[dict[str, str]], *, production: bool) -> str:

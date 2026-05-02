@@ -138,7 +138,8 @@ Check deployment environment readiness without printing secret values:
 ```
 
 This check reports only variable names and readiness status. It treats empty
-values and obvious placeholders like `your-api-key-here` as missing.
+values and obvious placeholders like `your-api-key-here` as missing, and
+rejects wildcard `ALLOWED_ORIGINS` in production mode.
 
 Check that production target decisions have been filled in:
 

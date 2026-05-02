@@ -38,6 +38,43 @@ def test_placeholder_values_are_treated_as_missing():
     assert deployment_env_check.is_configured("sk-ant-test") is True
 
 
+def test_production_profile_rejects_wildcard_allowed_origins():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://example",
+            "ANTHROPIC_API_KEY": "sk-ant-test",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com, *",
+            "NEXT_PUBLIC_API_URL": "https://cockpit.example.com/api",
+        },
+        production=True,
+    )
+
+    assert rows == [
+        {"name": "DATABASE_URL", "status": "ok", "required": "yes"},
+        {"name": "ANTHROPIC_API_KEY", "status": "ok", "required": "yes"},
+        {"name": "ALLOWED_ORIGINS", "status": "invalid", "required": "yes"},
+        {"name": "NEXT_PUBLIC_API_URL", "status": "ok", "required": "yes"},
+    ]
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_local_profile_does_not_reject_wildcard_allowed_origins():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://localhost/db",
+            "ALLOWED_ORIGINS": "*",
+        },
+        production=False,
+    )
+
+    assert rows[2] == {
+        "name": "ALLOWED_ORIGINS",
+        "status": "ok",
+        "required": "no",
+    }
+    assert deployment_env_check.has_blockers(rows) is False
+
+
 def test_report_never_prints_secret_values():
     rows = deployment_env_check.check_environment(
         {
