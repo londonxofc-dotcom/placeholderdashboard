@@ -3,6 +3,8 @@
 from typing import Any, Optional, Tuple
 import uuid
 
+from backend.services.memory_isolation import MemoryIsolationService
+
 
 class ToolWrapper:
     """Wrapper for safe tool execution."""
@@ -12,6 +14,7 @@ class ToolWrapper:
         self.tool_service = tool_service
         self.cost_service = cost_service
         self.memory_service = memory_service
+        self.memory_isolation = MemoryIsolationService(memory_service)
 
     async def execute(
         self,
@@ -48,10 +51,11 @@ class ToolWrapper:
 
             # Store result in memory
             if task_id:
-                self.memory_service.store(
+                self.memory_isolation.write(
                     mission_id,
                     f"task_{task_id}_result",
                     result,
+                    memory_scope="isolated",
                     visibility="task"
                 )
 

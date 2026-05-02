@@ -222,6 +222,33 @@ class TestExecuteTaskNode:
         # Original list must be untouched
         assert state["approved_task_ids"] == original_ids
 
+    @pytest.mark.asyncio
+    async def test_execute_namespaces_memory_write_through_isolation_boundary(self):
+        graph = _make_graph()
+        state = {
+            "mission_id": "m_graph_iso",
+            "objective": "x",
+            "state": "executing",
+            "tasks": SAMPLE_TASKS,
+            "approved_task_ids": ["t_aaa"],
+            "execution_results": [],
+            "mission_error": None,
+            "iteration_count": 0,
+            "cost_usd": 0.0,
+        }
+
+        await graph._execute_task_node(state)
+
+        raw_entry = graph.memory_service.retrieve("m_graph_iso", "task_t_aaa_result")
+        scoped_entry = graph.memory_service.retrieve(
+            "m_graph_iso",
+            "m_graph_iso::task_t_aaa_result",
+        )
+
+        assert raw_entry is None
+        assert scoped_entry is not None
+        assert scoped_entry["tool"] == "read_file"
+
 
 # ---------------------------------------------------------------------------
 # Tests: _should_continue routing

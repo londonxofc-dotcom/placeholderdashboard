@@ -20,6 +20,7 @@ from backend.agents.reviewers import ReviewGate
 from backend.services.abac_enforcer import ABACEnforcer
 from backend.services.cost_alert_service import CostAlertService
 from backend.services.cost_service import CostService
+from backend.services.memory_isolation import MemoryIsolationService
 from backend.services.memory_service import MemoryService
 from backend.services.tool_service import ToolService
 
@@ -73,6 +74,7 @@ class BatmanGraph:
         self.tool_service = tool_service
         self.cost_service = cost_service
         self.memory_service = memory_service
+        self.memory_isolation = MemoryIsolationService(memory_service)
         self.decomposer = decomposer or DecomposerAgent()
         self.review_gate = review_gate or ReviewGate()
         self.cost_alert_service = cost_alert_service or CostAlertService()
@@ -374,10 +376,11 @@ class BatmanGraph:
             )
 
             # Store result in mission-scoped memory
-            self.memory_service.store(
+            self.memory_isolation.write(
                 state["mission_id"],
                 f"task_{task_id}_result",
                 {"task": task["name"], "tool": tool_name},
+                memory_scope="isolated",
                 visibility="task",
             )
 
