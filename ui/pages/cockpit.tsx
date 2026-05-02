@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ExecutionLog } from '../components/ExecutionLog';
 import { CostTrackerWidget } from '../components/CostTrackerWidget';
 
@@ -69,6 +69,7 @@ type MissionState =
   | 'decomposed'
   | 'awaiting_approval'
   | 'executing'
+  | 'partial'
   | 'complete'
   | 'completed'
   | 'failed';
@@ -152,6 +153,14 @@ interface JarvisRunSummary {
   cost_alerts: CostAlertItem[];
 }
 
+interface BatmanRunSummary {
+  mission_id: string;
+  status: 'completed' | 'partial' | 'failed' | string;
+  results: TaskResult[];
+  total_cost_usd: number;
+  cost_alerts?: CostAlertItem[];
+}
+
 // ---------------------------------------------------------------------------
 // Fetch helpers
 // ---------------------------------------------------------------------------
@@ -190,8 +199,6 @@ export default function Cockpit() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const resetMissionState = useCallback(() => {
     setMissionId(null);
@@ -235,32 +242,27 @@ export default function Cockpit() {
     }
   }, []);
 
-  // Polling — only meaningful while there is in-flight work
+  const refreshMissionObservability = useCallback(async (id: string) => {
+    await Promise.all([fetchCost(id), fetchResults(id), fetchAlerts(id)]);
+  }, [fetchCost, fetchResults, fetchAlerts]);
+
+  // Poll only while execution is actually in flight. Waiting-for-approval
+  // missions still get one refresh, but do not keep a background interval open.
   useEffect(() => {
     if (!missionId) return;
 
-    fetchCost(missionId);
-    fetchResults(missionId);
-    fetchAlerts(missionId);
+    void refreshMissionObservability(missionId);
 
-    pollIntervalRef.current = setInterval(() => {
-      fetchCost(missionId);
-      fetchResults(missionId);
-      fetchAlerts(missionId);
+    if (missionState !== 'executing') return;
+
+    const pollInterval = setInterval(() => {
+      void refreshMissionObservability(missionId);
     }, 3000);
 
     return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      clearInterval(pollInterval);
     };
-  }, [missionId, fetchCost, fetchResults, fetchAlerts]);
-
-  useEffect(() => {
-    if (!missionState) return;
-    const terminal: MissionState[] = ['complete', 'completed', 'failed'];
-    if (terminal.includes(missionState) && pendingTasks.length === 0) {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    }
-  }, [missionState, pendingTasks.length]);
+  }, [missionId, missionState, refreshMissionObservability]);
 
   // -------------------------------------------------------------------------
   // Launch
@@ -296,7 +298,7 @@ export default function Cockpit() {
           method: 'POST',
         });
         setResults(run.results);
-        setMissionState(run.status === 'completed' ? 'completed' : run.status === 'failed' ? 'failed' : 'executing');
+        setMissionState(missionStateFromRunStatus(run.status));
       } else {
         // Wakanda: classify + auto-run pass-through, return gated queue
         const run = await apiFetch<WakandaRunSummary>(
@@ -342,25 +344,29 @@ export default function Cockpit() {
         }
 
         // Drop the approved task from the queue
-        setPendingTasks(prev => prev.filter(t => t.id !== taskId));
+        const stillPending = pendingTasks.filter(t => t.id !== taskId);
+        setPendingTasks(stillPending);
 
         // Batman: only run /execute when the queue is empty
         if (missionMode === 'batman') {
-          const stillPending = pendingTasks.filter(t => t.id !== taskId);
           if (stillPending.length === 0) {
-            await apiFetch(`/missions/${missionId}/execute`, { method: 'POST' });
-            setMissionState('executing');
+            const run = await apiFetch<BatmanRunSummary>(
+              `/missions/${missionId}/execute`,
+              { method: 'POST' },
+            );
+            setResults(run.results ?? []);
+            setMissionState(missionStateFromRunStatus(run.status));
           }
+        } else if (missionMode === 'wakanda' && stillPending.length === 0) {
+          setMissionState('completed');
         }
 
-        await fetchCost(missionId);
-        await fetchResults(missionId);
-        await fetchAlerts(missionId);
+        await refreshMissionObservability(missionId);
       } catch (err) {
         setActionError(err instanceof Error ? err.message : 'Approval failed');
       }
     },
-    [missionId, missionMode, pendingTasks, fetchCost, fetchResults, fetchAlerts],
+    [missionId, missionMode, pendingTasks, refreshMissionObservability],
   );
 
   const handleReject = useCallback(
@@ -392,13 +398,17 @@ export default function Cockpit() {
           );
         }
 
-        setPendingTasks(prev => prev.filter(t => t.id !== taskId));
+        const stillPending = pendingTasks.filter(t => t.id !== taskId);
+        setPendingTasks(stillPending);
+        if (missionMode === 'wakanda' && stillPending.length === 0) {
+          setMissionState('completed');
+        }
         await fetchResults(missionId);
       } catch (err) {
         setActionError(err instanceof Error ? err.message : 'Reject failed');
       }
     },
-    [missionId, missionMode, fetchResults],
+    [missionId, missionMode, pendingTasks, fetchResults],
   );
 
   // -------------------------------------------------------------------------
@@ -412,6 +422,7 @@ export default function Cockpit() {
     if (!missionId) return 'No active mission';
     if (pendingTasks.length > 0) return `Waiting on you — ${pendingTasks.length} to review`;
     if (missionState === 'executing') return 'Running…';
+    if (missionState === 'partial') return 'Partial';
     if (missionState === 'completed' || missionState === 'complete') return 'Done';
     if (missionState === 'failed') return 'Failed';
     return missionState ?? '—';
@@ -593,6 +604,13 @@ function resultsToTaskList(results: TaskResult[]): ExecutionLogTask[] {
     result: r.error ?? undefined,
     cost: r.cost_usd,
   }));
+}
+
+function missionStateFromRunStatus(status: string): MissionState {
+  if (status === 'completed') return 'completed';
+  if (status === 'failed') return 'failed';
+  if (status === 'partial') return 'partial';
+  return 'executing';
 }
 
 // ---------------------------------------------------------------------------

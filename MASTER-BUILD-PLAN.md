@@ -1,7 +1,7 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 5 docs/polish (Resonance OS implementation blocked pending source/surface decision)
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅, cockpit idle-polling optimization ✅.
 **Active Worktrees:** none
 **Blockers:** Resonance OS source/surface decision needed before implementation
 **Next Approval Gate:** Phase 5 performance/deployment target decision, or Resonance OS source/surface decision
@@ -126,6 +126,7 @@
 - [x] Operator guide — `docs/OPERATOR_GUIDE.md`
 - [x] README refresh — `README.md`
 - [x] Deployment guide — `docs/DEPLOYMENT_GUIDE.md`
+- [x] Cockpit idle-polling optimization + route-safe cockpit regression tests — `ui/pages/cockpit.tsx`, `ui/__tests__/cockpit.test.tsx`
 - [ ] Performance optimization
 - [ ] Deployment + monitoring
 
