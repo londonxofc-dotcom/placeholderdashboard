@@ -116,6 +116,19 @@ def _mission_to_response(mission: dict[str, Any]) -> MissionResponse:
     )
 
 
+def _required_approvers(mission: dict[str, Any], fallback_approver: str) -> list[str]:
+    approvers = mission.get("approvers") or []
+    return list(approvers) if approvers else [fallback_approver]
+
+
+def _approved_approver_ids(mission_id: str, task_id: str) -> set[str]:
+    return {
+        approval["approver_id"]
+        for approval in _approvals.get(mission_id, [])
+        if approval["task_id"] == task_id and approval["approved"] is True
+    }
+
+
 # ---------------------------------------------------------------------------
 # Missions
 # ---------------------------------------------------------------------------
@@ -228,7 +241,7 @@ async def approve_task(
     Approved tasks are queued for execution.
     Rejected tasks are marked rejected — they will NOT execute.
     """
-    _get_mission_or_404(mission_id)
+    mission = _get_mission_or_404(mission_id)
 
     mission_tasks = _tasks.get(mission_id, [])
     task = next((t for t in mission_tasks if t["id"] == task_id), None)
@@ -238,14 +251,17 @@ async def approve_task(
             detail=f"Task '{task_id}' not found in mission '{mission_id}'",
         )
 
+    required_approvers = _required_approvers(mission, req.approver_id)
+    if req.approver_id not in required_approvers:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Approver '{req.approver_id}' is not in the approval chain "
+                f"for mission '{mission_id}'."
+            ),
+        )
+
     now = datetime.now(timezone.utc)
-    if req.approved:
-        task["status"] = TaskStatus.APPROVED
-        task["approved_at"] = now
-        message = "Task approved and queued for execution"
-    else:
-        task["status"] = TaskStatus.REJECTED
-        message = f"Task rejected: {req.reason or 'no reason given'}"
 
     # Record approval
     approval_record = {
@@ -258,6 +274,23 @@ async def approve_task(
         "approved_at": now,
     }
     _approvals.setdefault(mission_id, []).append(approval_record)
+
+    if req.approved:
+        approved_ids = _approved_approver_ids(mission_id, task_id)
+        missing = [a for a in required_approvers if a not in approved_ids]
+        if missing:
+            task["status"] = TaskStatus.PENDING_APPROVAL
+            message = (
+                "Approval recorded; waiting for "
+                f"{len(missing)} more approver(s)"
+            )
+        else:
+            task["status"] = TaskStatus.APPROVED
+            task["approved_at"] = now
+            message = "Task approved and queued for execution"
+    else:
+        task["status"] = TaskStatus.REJECTED
+        message = f"Task rejected: {req.reason or 'no reason given'}"
 
     return ApprovalResponse(
         success=True,

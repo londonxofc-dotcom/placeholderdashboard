@@ -281,7 +281,101 @@ async def test_batman_requires_approval(client: httpx.AsyncClient):
 
 
 # ---------------------------------------------------------------------------
-# Test 3 — Mission not found → 404
+# Test 3 — Batman multi-approver tasks require every listed approver
+# ---------------------------------------------------------------------------
+
+async def test_batman_requires_all_named_approvers_before_execution(
+    client: httpx.AsyncClient,
+):
+    """A Batman task should not execute until every mission approver approves it."""
+    def side_effect(mission_id: str, objective: str):  # noqa: ANN202
+        tasks = _make_stamped_tasks(mission_id)[:1]
+        tasks[0]["tool"] = tasks[0]["suggested_tool"]
+        tasks[0]["parameters"] = {}
+        return tasks
+
+    with patch(
+        "backend.api.routes._supervisor.graph.decomposer.run",
+        new_callable=AsyncMock,
+        side_effect=side_effect,
+    ):
+        resp = await client.post(
+            "/api/missions",
+            json={
+                "objective": "Post on Instagram",
+                "mode": "batman",
+                "approvers": ["alice", "bob"],
+            },
+        )
+
+    assert resp.status_code == 201, resp.text
+    mission_id = resp.json()["id"]
+    task_id = resp.json()["tasks"][0]["id"]
+
+    resp = await client.post(
+        f"/api/missions/{mission_id}/tasks/{task_id}/approve",
+        json={"approved": True, "approver_id": "alice"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    tasks = (await client.get(f"/api/missions/{mission_id}/tasks")).json()
+    assert tasks[0]["status"] == "pending_approval"
+
+    resp = await client.post(f"/api/missions/{mission_id}/execute")
+    assert resp.status_code == 400
+
+    resp = await client.post(
+        f"/api/missions/{mission_id}/tasks/{task_id}/approve",
+        json={"approved": True, "approver_id": "bob"},
+    )
+    assert resp.status_code == 200, resp.text
+
+    tasks = (await client.get(f"/api/missions/{mission_id}/tasks")).json()
+    assert tasks[0]["status"] == "approved"
+
+    resp = await client.post(f"/api/missions/{mission_id}/execute")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["results"][0]["status"] == "completed"
+
+
+async def test_batman_rejects_approver_outside_mission_chain(
+    client: httpx.AsyncClient,
+):
+    """Named Batman approver chains should reject approvals from outsiders."""
+    def side_effect(mission_id: str, objective: str):  # noqa: ANN202
+        tasks = _make_stamped_tasks(mission_id)[:1]
+        tasks[0]["tool"] = tasks[0]["suggested_tool"]
+        tasks[0]["parameters"] = {}
+        return tasks
+
+    with patch(
+        "backend.api.routes._supervisor.graph.decomposer.run",
+        new_callable=AsyncMock,
+        side_effect=side_effect,
+    ):
+        resp = await client.post(
+            "/api/missions",
+            json={
+                "objective": "Post on Instagram",
+                "mode": "batman",
+                "approvers": ["alice"],
+            },
+        )
+
+    assert resp.status_code == 201, resp.text
+    mission_id = resp.json()["id"]
+    task_id = resp.json()["tasks"][0]["id"]
+
+    resp = await client.post(
+        f"/api/missions/{mission_id}/tasks/{task_id}/approve",
+        json={"approved": True, "approver_id": "mallory"},
+    )
+
+    assert resp.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Test 4 — Mission not found → 404
 # ---------------------------------------------------------------------------
 
 async def test_mission_not_found(client: httpx.AsyncClient):
@@ -293,7 +387,7 @@ async def test_mission_not_found(client: httpx.AsyncClient):
 
 
 # ---------------------------------------------------------------------------
-# Test 4 — Decomposer is called on create
+# Test 5 — Decomposer is called on create
 # ---------------------------------------------------------------------------
 
 async def test_decomposer_called_on_create(client: httpx.AsyncClient):
