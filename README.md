@@ -83,12 +83,13 @@ Deployment preflight:
 .venv/bin/python tools/deployment_preflight.py
 .venv/bin/python tools/deployment_preflight.py --include-decision-check
 .venv/bin/python tools/deployment_preflight.py --include-decision-check --include-production-env-check
+.venv/bin/python tools/deployment_preflight.py --include-probe-check --probe-base-url http://localhost:8000
 .venv/bin/python tools/deployment_env_check.py --production
 .venv/bin/python tools/deployment_decision_check.py
 .venv/bin/python tools/deployment_probe_check.py --base-url http://localhost:8000
 ```
 
-The environment check reports variable names and readiness only; it does not print secret values, rejects malformed production database/CORS/API URLs, and requires `NEXT_PUBLIC_API_URL` to be an exact HTTP(S) URL ending in `/api` with no query or fragment. Runtime CORS parsing also ignores wildcard or malformed origin entries. The decision check fails while the deployment decision record still contains `TBD` values and reports only unresolved line numbers/sections. The probe checker expects an HTTP(S) backend base URL without `/api`, fails fast if the URL is malformed or `/api` is included, and verifies expected JSON status values; use `--allow-degraded-ready` only for pre-launch reachability checks.
+The environment check reports variable names and readiness only; it does not print secret values, rejects malformed production database/CORS/API URLs, and requires `NEXT_PUBLIC_API_URL` to be an exact HTTP(S) URL ending in `/api` with no query or fragment. Runtime CORS parsing also ignores wildcard or malformed origin entries. The decision check fails while the deployment decision record still contains `TBD` values and reports only unresolved line numbers/sections. The preflight runner can include the probe check for a running backend. The probe checker expects an HTTP(S) backend base URL without `/api`, fails fast if the URL is malformed or `/api` is included, and verifies expected JSON status values; use `--allow-degraded-ready` only for pre-launch reachability checks.
 
 ## Operating Modes
 

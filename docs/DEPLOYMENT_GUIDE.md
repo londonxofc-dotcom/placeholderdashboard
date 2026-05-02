@@ -118,6 +118,13 @@ This variant is expected to fail until `docs/DEPLOYMENT_DECISION_RECORD.md`
 has real target, secrets, access, and budget decisions, and until production
 environment variables are configured.
 
+When a backend is already running, include public probe verification in the
+same preflight pass:
+
+```bash
+.venv/bin/python tools/deployment_preflight.py --include-probe-check --probe-base-url http://localhost:8000
+```
+
 Or run the checks directly:
 
 ```bash

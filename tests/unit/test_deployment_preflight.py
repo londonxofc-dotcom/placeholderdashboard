@@ -45,15 +45,51 @@ def test_build_steps_can_include_production_env_check():
     )
 
 
+def test_build_steps_can_include_probe_check():
+    steps = deployment_preflight.build_steps(
+        include_probe_check=True,
+        probe_base_url="https://backend.example.com",
+    )
+
+    assert [step.name for step in steps] == [
+        "deployment probe check",
+        "backend tests",
+        "ui typecheck",
+        "ui build",
+        "ui tests",
+    ]
+    assert steps[0].command[1:] == (
+        "tools/deployment_probe_check.py",
+        "--base-url",
+        "https://backend.example.com",
+    )
+
+
+def test_build_steps_can_allow_degraded_ready_probe_check():
+    steps = deployment_preflight.build_steps(
+        include_probe_check=True,
+        allow_degraded_ready=True,
+    )
+
+    assert steps[0].command[1:] == (
+        "tools/deployment_probe_check.py",
+        "--base-url",
+        "http://localhost:8000",
+        "--allow-degraded-ready",
+    )
+
+
 def test_build_steps_runs_launch_checks_before_verification():
     steps = deployment_preflight.build_steps(
         include_decision_check=True,
         include_production_env_check=True,
+        include_probe_check=True,
     )
 
-    assert [step.name for step in steps[:3]] == [
+    assert [step.name for step in steps[:4]] == [
         "deployment decision check",
         "production environment check",
+        "deployment probe check",
         "backend tests",
     ]
 

@@ -31,6 +31,9 @@ def build_steps(
     skip_ui_build: bool = False,
     include_decision_check: bool = False,
     include_production_env_check: bool = False,
+    include_probe_check: bool = False,
+    probe_base_url: str = "http://localhost:8000",
+    allow_degraded_ready: bool = False,
 ) -> list[Step]:
     steps: list[Step] = []
     if include_decision_check:
@@ -47,6 +50,16 @@ def build_steps(
                 (sys.executable, "tools/deployment_env_check.py", "--production"),
             )
         )
+    if include_probe_check:
+        command = [
+            sys.executable,
+            "tools/deployment_probe_check.py",
+            "--base-url",
+            probe_base_url,
+        ]
+        if allow_degraded_ready:
+            command.append("--allow-degraded-ready")
+        steps.append(Step("deployment probe check", tuple(command)))
     if include_backend:
         steps.append(
             Step(
@@ -137,6 +150,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Fail if production deployment environment variables are not ready.",
     )
+    parser.add_argument(
+        "--include-probe-check",
+        action="store_true",
+        help="Fail if backend /health, /status, or /ready probes do not pass.",
+    )
+    parser.add_argument(
+        "--probe-base-url",
+        default="http://localhost:8000",
+        help="Backend base URL for --include-probe-check.",
+    )
+    parser.add_argument(
+        "--allow-degraded-ready",
+        action="store_true",
+        help="Allow /ready to report degraded during the probe check.",
+    )
     return parser.parse_args(argv)
 
 
@@ -154,6 +182,9 @@ def main(argv: list[str] | None = None) -> int:
         skip_ui_build=args.skip_ui_build,
         include_decision_check=args.include_decision_check,
         include_production_env_check=args.include_production_env_check,
+        include_probe_check=args.include_probe_check,
+        probe_base_url=args.probe_base_url,
+        allow_degraded_ready=args.allow_degraded_ready,
     )
 
     protected_status = protected_file_status()
