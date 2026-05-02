@@ -19,6 +19,25 @@ def _get_app():
     return app
 
 
+def test_parse_allowed_origins_strips_whitespace_and_empty_entries():
+    _get_app()
+    from backend.main import _parse_allowed_origins
+
+    assert _parse_allowed_origins(
+        " https://cockpit.example.com,https://admin.example.com, "
+    ) == [
+        "https://cockpit.example.com",
+        "https://admin.example.com",
+    ]
+
+
+def test_parse_allowed_origins_falls_back_to_localhost():
+    _get_app()
+    from backend.main import _parse_allowed_origins
+
+    assert _parse_allowed_origins(" , ") == ["http://localhost:3000"]
+
+
 async def test_health_reports_current_phase_without_dependency_checks():
     app = _get_app()
     transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]

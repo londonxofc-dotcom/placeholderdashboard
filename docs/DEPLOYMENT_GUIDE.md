@@ -81,7 +81,7 @@ Backend:
 | `DATABASE_URL` | Yes for DB-backed runtime | Defaults to local Postgres URL in code |
 | `SQL_ECHO` | No | SQL logging toggle |
 | `ANTHROPIC_API_KEY` | Yes for real missions | Needed by Claude-backed decomposition/review paths |
-| `ALLOWED_ORIGINS` | Production yes | Comma-separated CORS allow-list |
+| `ALLOWED_ORIGINS` | Production yes | Comma-separated CORS allow-list; whitespace is trimmed and empty entries are ignored |
 
 Frontend:
 
