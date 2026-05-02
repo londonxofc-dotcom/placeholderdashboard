@@ -1,10 +1,10 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 5 docs/polish (Resonance OS implementation blocked pending source/surface decision)
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅.
 **Active Worktrees:** none
 **Blockers:** Resonance OS source/surface decision needed before implementation
-**Next Approval Gate:** Phase 5 deployment guide, or Resonance OS source/surface decision
+**Next Approval Gate:** Phase 5 performance/deployment target decision, or Resonance OS source/surface decision
 **Session State:** see `current.md` (16D shell — read on session open)
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
@@ -125,6 +125,7 @@
 ## Phase 5 — Polish & Launch (Week 13) — ACTIVE
 - [x] Operator guide — `docs/OPERATOR_GUIDE.md`
 - [x] README refresh — `README.md`
+- [x] Deployment guide — `docs/DEPLOYMENT_GUIDE.md`
 - [ ] Performance optimization
 - [ ] Deployment + monitoring
 
@@ -145,9 +146,10 @@
 - **Phase 3 Wakanda:** `docs/SPEC_PHASE3_WAKANDA.md` (draft, awaiting Nick review)
 - **Architecture:** `docs/ARCHITECTURE.md`
 - **Operator Guide:** `docs/OPERATOR_GUIDE.md`
+- **Deployment Guide:** `docs/DEPLOYMENT_GUIDE.md`
 - **Resonance OS Scoping:** `docs/RESONANCE_OS_INTEGRATION_SCOPE.md`
 
 ---
 
-**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, README refreshed)
+**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, deployment guide added)
 **Maintained By:** Mission Architect Agent
