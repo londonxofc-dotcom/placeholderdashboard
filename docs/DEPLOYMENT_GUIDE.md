@@ -162,7 +162,8 @@ After a backend is running locally or on a host, check the public probes:
 ```
 
 Use the deployed backend base URL for production. The base URL should not
-include `/api`; the checker calls `/health`, `/status`, and `/ready`.
+include `/api`; the checker calls `/health`, `/status`, and `/ready`, and
+fails fast if `/api` is included in the base URL path.
 
 Before all production dependencies are configured, use pre-launch reachability
 mode to allow `/ready` to report `degraded` while still requiring `/health` and

@@ -31,6 +31,14 @@ def test_normalize_base_url_adds_trailing_slash():
     )
 
 
+def test_has_api_path_detects_api_segment():
+    assert deployment_probe_check.has_api_path("https://example.com/api") is True
+    assert deployment_probe_check.has_api_path("https://example.com/api/") is True
+    assert deployment_probe_check.has_api_path("https://example.com/v1/api") is True
+    assert deployment_probe_check.has_api_path("https://api.example.com") is False
+    assert deployment_probe_check.has_api_path("https://example.com/capitol") is False
+
+
 def test_probe_url_reports_ok_json_status():
     def opener(url, timeout):
         assert url == "https://api.example.com/health"
@@ -180,6 +188,23 @@ def test_main_can_allow_degraded_ready(monkeypatch):
     )
 
     assert deployment_probe_check.main(["--allow-degraded-ready"]) == 0
+
+
+def test_main_rejects_base_url_with_api_path(monkeypatch, capsys):
+    calls: list[str] = []
+    monkeypatch.setattr(
+        deployment_probe_check,
+        "run_probes",
+        lambda base_url, timeout: calls.append(base_url),
+    )
+
+    code = deployment_probe_check.main(
+        ["--base-url", "https://example.com/api"]
+    )
+
+    assert code == 2
+    assert calls == []
+    assert "without /api" in capsys.readouterr().err
 
 
 def test_main_returns_success_when_all_probes_pass(monkeypatch):

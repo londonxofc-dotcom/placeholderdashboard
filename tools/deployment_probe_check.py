@@ -8,7 +8,7 @@ import sys
 from dataclasses import dataclass
 from typing import Callable
 from urllib.error import HTTPError, URLError
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from urllib.request import urlopen
 
 
@@ -28,6 +28,12 @@ UrlOpen = Callable[[str, float], object]
 
 def normalize_base_url(base_url: str) -> str:
     return base_url.rstrip("/") + "/"
+
+
+def has_api_path(base_url: str) -> bool:
+    parsed = urlparse(base_url)
+    path_parts = [part for part in parsed.path.split("/") if part]
+    return "api" in path_parts
 
 
 def probe_url(
@@ -132,6 +138,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
+    if has_api_path(args.base_url):
+        print(
+            "Deployment probe check failed: --base-url must be the backend "
+            "base URL without /api.",
+            file=sys.stderr,
+        )
+        return 2
     results = run_probes(args.base_url, timeout=args.timeout)
     print(render_results(results))
     return 0 if passes_probe_policy(
