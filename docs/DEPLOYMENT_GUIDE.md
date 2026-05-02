@@ -121,6 +121,15 @@ For backend deployment probes, also verify:
 .venv/bin/python -m pytest tests/unit/test_backend_health.py -v
 ```
 
+Check deployment environment readiness without printing secret values:
+
+```bash
+.venv/bin/python tools/deployment_env_check.py --production
+```
+
+This check reports only variable names and readiness status. It treats empty
+values and obvious placeholders like `your-api-key-here` as missing.
+
 ## Production Deployment Decision Points
 
 Before writing deployment config, decide:
