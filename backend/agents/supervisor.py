@@ -111,9 +111,10 @@ class BatmanSupervisor:
         total_cost = 0.0
         cost_alerts: list[dict[str, Any]] = []
         mode_value = self._normalize_mode(mode)
+        tasks_by_id = {task["id"]: task for task in all_tasks}
 
         for task_id in approved_task_ids:
-            task = next((t for t in all_tasks if t["id"] == task_id), None)
+            task = tasks_by_id.get(task_id)
             if not task:
                 results.append({
                     "task_id": task_id,

@@ -1,7 +1,7 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 5 docs/polish (Resonance OS implementation blocked pending source/surface decision)
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅, deployment decision record ✅, cockpit idle-polling optimization ✅, backend readiness probe ✅, required credential readiness check ✅, local deployment preflight ✅, CORS origin normalization ✅, protected-file preflight guard ✅, cockpit summary-based observability ✅, runtime status endpoint ✅, non-secret env readiness check ✅, deployment probe checker ✅, backend task lookup optimization ✅.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, graph/tool-wrapper isolation write paths ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅, tool/role vocabulary alignment ✅, Batman multi-approver chain ✅, Resonance OS scoping ✅. Phase 5 operator guide ✅, README refresh ✅, deployment guide ✅, deployment decision record ✅, cockpit idle-polling optimization ✅, backend readiness probe ✅, required credential readiness check ✅, local deployment preflight ✅, CORS origin normalization ✅, protected-file preflight guard ✅, cockpit summary-based observability ✅, runtime status endpoint ✅, non-secret env readiness check ✅, deployment probe checker ✅, backend task lookup optimization ✅, supervisor task lookup optimization ✅.
 **Active Worktrees:** none
 **Blockers:** Resonance OS source/surface decision needed before implementation
 **Next Approval Gate:** Phase 5 performance/deployment target decision, or Resonance OS source/surface decision
@@ -137,6 +137,7 @@
 - [x] Non-secret deployment environment readiness checker — `tools/deployment_env_check.py`
 - [x] Backend deployment probe checker for `/health`, `/status`, and `/ready` — `tools/deployment_probe_check.py`
 - [x] Backend approval/execution task lookup uses per-request task-id maps — `backend/api/routes.py`
+- [x] Batman supervisor execution uses per-run task-id maps — `backend/agents/supervisor.py`
 - [ ] Performance optimization
 - [ ] Deployment + monitoring
 

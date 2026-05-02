@@ -201,3 +201,23 @@ class TestSupervisorHonorsPolicy:
 
         assert summary["status"] == "completed"
         assert summary["results"][0]["status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_missing_approved_task_id_returns_error_result(self):
+        sup = _make_supervisor()
+        summary = await sup.execute_approved_tasks(
+            mission_id="m_p3missing",
+            objective="Read contract",
+            all_tasks=[CLEAN_TASK],
+            approved_task_ids=["missing-task"],
+            abac_policy=WIDE_POLICY,
+        )
+
+        assert summary["status"] == "partial"
+        assert summary["results"] == [
+            {
+                "task_id": "missing-task",
+                "status": "error",
+                "error": "Task not found",
+            }
+        ]
