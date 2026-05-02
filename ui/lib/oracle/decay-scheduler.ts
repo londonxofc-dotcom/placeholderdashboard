@@ -1,4 +1,4 @@
-import type { RolePair, HebbianGraph } from './hebrian-dynamics'
+import type { RolePair, HebbianGraph } from './hebbian-dynamics'
 
 // ============================================================================
 // STAGE E LIFECYCLE CONTRACT — Authoritative Spec
@@ -47,6 +47,8 @@ export interface DecaySchedulerInput {
   decay_state?: DecayState
   confidence?: number
   reason_codes?: string[]
+  quarantine_signals?: QuarantineSignal[]
+  explicit_archive_override?: boolean
 }
 
 export interface DecaySchedulerResult {
@@ -63,7 +65,14 @@ export interface DecaySchedulerResult {
 }
 
 export interface QuarantineSignal {
-  signal_type: 'hard_boundary_breach' | 'source_mutation_attempt' | 'contamination' | 'contradiction' | 'missing_provenance'
+  signal_type:
+    | 'hard_boundary_breach'
+    | 'source_mutation_attempt'
+    | 'contamination'
+    | 'contradiction'
+    | 'missing_provenance'
+    | 'unsafe_cross_domain'
+    | 'low_confidence'
   confidence: number
   reason: string
 }
@@ -349,7 +358,7 @@ export function applyLifecyclePolicy(input: DecaySchedulerInput & {
   // Step 2: Mark decay state based on staleness
   const decay_state = markStale({
     ...input,
-    weight: decay_result.decayed_weight
+    weight: decay_result.weight_after_decay
   })
 
   // Step 3: Detect quarantine

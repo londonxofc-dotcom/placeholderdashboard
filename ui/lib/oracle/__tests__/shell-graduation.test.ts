@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest'
-import { shouldPromote, ShellGraduationEntry, ShellGraduationDecision } from '../shell-graduation'
+import { shouldPromote } from '../shell-graduation'
+import type { ShellGraduationEntry } from '../shell-graduation'
 
 describe('Shell Graduation Contract', () => {
   const validBase: ShellGraduationEntry = {
@@ -40,7 +41,7 @@ describe('Shell Graduation Contract', () => {
   })
 
   test('Test 3: Hold when provenance is missing', () => {
-    const entry = { ...validBase, provenance_status: 'missing' }
+    const entry: ShellGraduationEntry = { ...validBase, provenance_status: 'missing' }
     const result = shouldPromote(entry)
 
     expect(result.decision).toBe('hold')
@@ -103,7 +104,7 @@ describe('Shell Graduation Contract', () => {
   })
 
   test('Test 8: Already promoted entry is rejected', () => {
-    const entry = { ...validBase, anchor_status: 'local_anchor' }
+    const entry: ShellGraduationEntry = { ...validBase, anchor_status: 'local_anchor' }
     const result = shouldPromote(entry)
 
     expect(result.decision).toBe('reject')
