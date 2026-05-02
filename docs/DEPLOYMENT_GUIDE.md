@@ -161,11 +161,11 @@ Check deployment environment readiness without printing secret values:
 This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing. In both
 local and production mode it requires `DATABASE_URL` to be a PostgreSQL URL.
-In production mode it also rejects wildcard `ALLOWED_ORIGINS` and requires
-`ALLOWED_ORIGINS` entries to be exact HTTP(S) origins, and
-`NEXT_PUBLIC_API_URL` to be an exact HTTP(S) URL pointing at the backend API
-prefix ending in `/api`, without query strings or fragments, not only the
-backend base URL.
+When `NEXT_PUBLIC_API_URL` is configured, it must be an exact HTTP(S) URL
+pointing at the backend API prefix ending in `/api`, without query strings or
+fragments. In production mode, `ALLOWED_ORIGINS` must contain exact HTTP(S)
+origins. In local mode, `ALLOWED_ORIGINS` may still be `*`, but any other
+configured values must also be exact origins.
 
 At runtime, wildcard or malformed CORS entries are ignored. If no exact
 HTTP(S) origins remain, the backend falls back to local cockpit development

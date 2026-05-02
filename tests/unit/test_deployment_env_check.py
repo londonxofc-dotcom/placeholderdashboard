@@ -41,6 +41,40 @@ def test_local_profile_accepts_postgres_database_url():
     assert deployment_env_check.has_blockers(rows) is False
 
 
+def test_local_profile_rejects_malformed_allowed_origins():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://localhost/app",
+            "ALLOWED_ORIGINS": "https://cockpit.example.com/path",
+        },
+        production=False,
+    )
+
+    assert rows[2] == {
+        "name": "ALLOWED_ORIGINS",
+        "status": "invalid",
+        "required": "no",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_local_profile_accepts_exact_allowed_origins():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://localhost/app",
+            "ALLOWED_ORIGINS": "http://localhost:3000, https://cockpit.example.com",
+        },
+        production=False,
+    )
+
+    assert rows[2] == {
+        "name": "ALLOWED_ORIGINS",
+        "status": "ok",
+        "required": "no",
+    }
+    assert deployment_env_check.has_blockers(rows) is False
+
+
 def test_production_profile_requires_deployment_variables():
     rows = deployment_env_check.check_environment(
         {
@@ -175,6 +209,40 @@ def test_local_profile_does_not_reject_wildcard_allowed_origins():
 
     assert rows[2] == {
         "name": "ALLOWED_ORIGINS",
+        "status": "ok",
+        "required": "no",
+    }
+    assert deployment_env_check.has_blockers(rows) is False
+
+
+def test_local_profile_rejects_malformed_next_public_api_url():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://localhost/app",
+            "NEXT_PUBLIC_API_URL": "backend.example.com/api",
+        },
+        production=False,
+    )
+
+    assert rows[3] == {
+        "name": "NEXT_PUBLIC_API_URL",
+        "status": "invalid",
+        "required": "no",
+    }
+    assert deployment_env_check.has_blockers(rows) is True
+
+
+def test_local_profile_accepts_exact_next_public_api_url():
+    rows = deployment_env_check.check_environment(
+        {
+            "DATABASE_URL": "postgresql://localhost/app",
+            "NEXT_PUBLIC_API_URL": "http://localhost:8000/api",
+        },
+        production=False,
+    )
+
+    assert rows[3] == {
+        "name": "NEXT_PUBLIC_API_URL",
         "status": "ok",
         "required": "no",
     }

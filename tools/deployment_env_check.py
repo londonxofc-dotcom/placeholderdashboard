@@ -59,10 +59,12 @@ def is_valid_value(
         return True
     if name == "DATABASE_URL":
         return is_postgres_url(value)
-    if production and name == "NEXT_PUBLIC_API_URL":
+    if name == "NEXT_PUBLIC_API_URL":
         return is_exact_backend_api_url(value)
     if production and name == "ALLOWED_ORIGINS":
         return allowed_origins_are_valid(value)
+    if not production and name == "ALLOWED_ORIGINS":
+        return value.strip() == "*" or allowed_origins_are_valid(value)
     if not production:
         return True
     invalid_values = INVALID_PRODUCTION_VALUES.get(name, set())
