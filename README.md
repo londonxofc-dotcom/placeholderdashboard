@@ -1,206 +1,161 @@
 # Mission Control OS
 
-AI-powered orchestration system with three execution modes: BATMAN (full approval chain), JARVIS (auto-execute), and WAKANDA (selective approval).
+Mission Control OS is an AI orchestration cockpit with three operating modes:
+
+| Brand | Mode | What It Does |
+|---|---|---|
+| Vampire Sex / London X | Batman | Approval-gated execution for public or reputation-sensitive work |
+| Fractal Web Solutions | Jarvis | Command-execute workflow for agency/dev tasks |
+| ATS / All the Smoke | Wakanda | Selective approval for label workflows |
+
+The backend exposes a FastAPI API. The cockpit is a Next.js UI under `ui/`.
+
+## Current State
+
+- Phase 0-3 are complete.
+- Phase 4 core runtime wiring is largely reconciled: memory isolation, role registry, ABAC role layer, actor-role propagation, tool/role vocabulary alignment, and Batman named-approver chains are landed.
+- Phase 5 docs/polish is active.
+- Resonance OS integration is scoped but intentionally not implemented until its source/surface/memory relationship is decided.
+
+See [MASTER-BUILD-PLAN.md](MASTER-BUILD-PLAN.md) for the live phase tracker.
 
 ## Quick Start
 
-### Prerequisites
-- Python 3.9+
-- PostgreSQL 13+
-
-### Setup
+Install backend dependencies:
 
 ```bash
-# Clone and navigate
-cd "Missipn Control Builder Agent"
-
-# Install dependencies (includes dev/test tools)
 python3 -m pip install -e '.[dev]'
-
-# Run tests
-python3 -m pytest tests/unit/test_mission.py -v
-
-# Initialize database
-psql -U postgres < db/schema.sql
 ```
 
-## Architecture
-
-### Core Models (spec sections 1–2)
-
-- **Mission Object** — Fundamental unit of work with:
-  - Three execution modes (BATMAN/JARVIS/WAKANDA)
-  - Immutable audit trail
-  - Cost tracking per event
-  - Role-based approval chain
-  - Memory scoping (isolated/shared/global)
-
-- **Tool Registry** — Centralized tool definitions with:
-  - Per-mode availability constraints
-  - Cost limits per invocation
-  - Approval requirements
-
-- **ABAC Engine** — Attribute-Based Access Control:
-  - Role-based policies
-  - Resource-scoped permissions
-  - Tool access enforcement
-
-### Database (db/schema.sql)
-
-- `missions` — Mission records with state, mode, costs
-- `approval_records` — Immutable approval decisions
-- `audit_log` — Append-only event trail
-- `tool_definitions` — Available tools + constraints
-- `abac_policies` — Access control policies
-
-### Tests (tests/unit/test_mission.py)
-
-16 unit tests covering:
-- Mission creation + validation
-- Approval chain logic (BATMAN/JARVIS/WAKANDA)
-- Audit entry immutability
-- Cost accumulation
-- Tool registry mode checking
-- ABAC policy enforcement
-
-All passing with 100% coverage of core logic.
-
-## Execution Modes
-
-| Mode | Approvers | Approval Required | Use Case |
-|------|-----------|-------------------|----------|
-| **BATMAN** | Explicit list | All must approve | High-stakes decisions requiring full review |
-| **JARVIS** | None | No | Autonomous execution, immediate action |
-| **WAKANDA** | Explicit list | At least one | Mixed workflows, some pre-approved, some review |
-
-## Build Phases
-
-- **Phase 0** — Foundation (Mission Object, audit, ABAC)
-- **Phase 1** — Batman Mode MVP (FastAPI, LangGraph, React UI)
-- **Phase 2** — Reviewer Agents + Guardrails
-- **Phase 3** — Jarvis & Wakanda Modes
-- **Phase 4** — Memory Scoping & Full ABAC
-- **Phase 5** — Polish & Launch
-
-## Development
-
-### Project Structure
-
-```
-.
-├── backend/
-│   ├── models/
-│   │   └── mission.py          # Core Mission Object
-│   ├── agents/                 # LangGraph agents (Phase 1+)
-│   └── approval.py             # Approval queue (Phase 1+)
-├── db/
-│   ├── schema.sql              # Postgres DDL
-│   └── migrations/             # Migration scripts
-├── ui/                         # React cockpit (Phase 1+)
-├── tests/
-│   └── unit/
-│       └── test_mission.py     # Mission Object tests
-├── pyproject.toml              # Python dependencies
-└── MASTER-BUILD-PLAN.md        # Phase tracking
-```
-
-### Testing
+Install UI dependencies:
 
 ```bash
-# Run all tests
-python3 -m pytest tests/ -v
-
-# With coverage
-python3 -m pytest tests/ --cov=backend --cov-report=term-missing
-
-# Specific test class
-python3 -m pytest tests/unit/test_mission.py::TestApprovalChain -v
+npm --prefix ui install
 ```
 
-### Code Quality
+Copy environment template:
 
 ```bash
-# Format
-black backend/ tests/
-
-# Lint
-ruff check backend/ tests/
-
-# Type check
-mypy backend/
+cp .env.example .env
 ```
 
-## Spec Reference
+Do not commit `.env`.
 
-Implementation follows the 17-section spec:
-- **Sections 1–2:** Mission Object + tool registry ✅ Phase 0 complete
-- **Sections 3–5:** Batman mode flow → Phase 1
-- **Sections 6–8:** Approval queue + guardrails → Phase 1
-- **Sections 9–11:** Jarvis + Wakanda modes → Phase 3
-- **Sections 12–14:** ABAC + memory scoping → Phase 4
-- **Sections 15–17:** Launch + monitoring → Phase 5
-
-## Phase 1: Batman Mode MVP
-
-**Starting Phase 1 — Approval-based execution workflow**
-
-### What's New
-
-- **FastAPI backend** with REST API for missions, tasks, approvals
-- **LangGraph agents** (stubs) for mission decomposition and execution
-- **React + Next.js UI** with components for approval queue and cost tracking
-- **SQLAlchemy ORM** models for database persistence
-- **Service layer** for mission, tool, cost, memory, and execution logic
-
-### Phase 1 Setup
+Run backend:
 
 ```bash
-# Backend
-python -m pip install -e '.[dev]'
-python -m pytest tests/unit tests/integration -v --cov=backend
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-
-# Frontend
-npm install
-npm run dev  # Starts on localhost:3000
-
-# Database
-createdb mission_control_os
-psql mission_control_os < db/schema.sql
-alembic upgrade head  # When migrations added
 ```
 
-### API Endpoints
+Run cockpit UI:
 
-- `POST /api/missions` — Create mission
-- `GET /api/missions` — List missions
-- `GET /api/missions/{id}` — Get mission details
-- `POST /api/missions/{id}/tasks` — Create task
-- `POST /api/missions/{id}/tasks/{id}/approve` — Approve/reject task
-- `POST /api/missions/{id}/tasks/{id}/execute` — Execute approved task
-- `GET /health` — Health check
+```bash
+npm --prefix ui run dev
+```
 
-### Success Criteria
+Default API base:
 
-- [ ] Operator creates mission with objective + approvers
-- [ ] System decomposes into 3+ tasks
-- [ ] Each task presented to operator for approval
-- [ ] Tool executes ONLY after approval
-- [ ] Real-time execution log + cost tracking visible
-- [ ] All tests passing (80%+ coverage)
-- [ ] No console errors in browser
+```text
+http://localhost:8000/api
+```
 
-## Status
+## Verification
 
-**Current:** Phase 1 skeleton complete
-- ✅ Folder structure (backend/api/services/agents/db, ui/components/pages/lib)
-- ✅ FastAPI main.py with CORS, docs, health endpoint
-- ✅ API schemas (Pydantic request/response models)
-- ✅ API routes (missions, tasks, approvals, execution)
-- ✅ Service layer (mission, tool, cost, memory, execution services)
-- ✅ Database models (SQLAlchemy ORM)
-- ✅ Agent stubs (BatmanLeadAgent, BatmanGraph, ToolWrapper)
-- ✅ React components (MissionGraph, ApprovalQueue, CostTracker)
-- ✅ Frontend hooks and types
-- ✅ .env.example with all vars
-- ⏳ Human review + tests execution
+Backend:
+
+```bash
+.venv/bin/python -m pytest tests/ -v
+```
+
+UI:
+
+```bash
+npm --prefix ui run typecheck
+npm --prefix ui run build
+npm --prefix ui test
+```
+
+When `npm --prefix ui run build` updates `ui/next-env.d.ts`, restore it before committing unless that file is intentionally in scope.
+
+## Operating Modes
+
+### Batman
+
+Batman mode is approval-gated.
+
+Flow:
+
+1. `POST /api/missions` with `mode: "batman"`.
+2. Backend decomposes immediately into approval-queue tasks.
+3. Approvers call `POST /api/missions/{mission_id}/tasks/{task_id}/approve`.
+4. When a task is approved, `POST /api/missions/{mission_id}/execute` runs approved tasks only.
+
+If a Batman mission declares `approvers`, every listed approver must approve a task before it becomes executable. Unknown approvers receive `403`. If no approvers are listed, the first approver is the single-operator fallback.
+
+### Jarvis
+
+Jarvis mode is command-execute.
+
+Flow:
+
+1. `POST /api/missions` with `mode: "jarvis"`.
+2. `POST /api/missions/{mission_id}/run`.
+
+The supervisor decomposes, reviews, executes, and returns results in one request.
+
+### Wakanda
+
+Wakanda mode is selective approval.
+
+Flow:
+
+1. `POST /api/missions` with `mode: "wakanda"`.
+2. `POST /api/missions/{mission_id}/run-wakanda`.
+3. Pass-through tasks run immediately.
+4. Gated tasks wait for `POST /api/missions/{mission_id}/wakanda/tasks/{task_id}/approve`.
+
+Current defaults are conservative: high-risk and unknown-tool tasks gate, rejecting one gated task does not cascade, and Wakanda remains single-operator in this build.
+
+## Guardrails
+
+Before execution, tasks pass:
+
+- Code review
+- Memory-scope review
+- Security/ABAC review
+- Runtime ABAC when `actor_roles` are supplied
+- ToolService permission checks
+
+Task result memory writes route through `MemoryIsolationService` for `ExecutorAgent`, `BatmanGraph`, and `ToolWrapper`.
+
+## Important Docs
+
+- [Operator Guide](docs/OPERATOR_GUIDE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Phase 4 Memory / ABAC Reconciliation](docs/PHASE_4_MEMORY_ABAC_RECONCILIATION.md)
+- [Resonance OS Integration Scope](docs/RESONANCE_OS_INTEGRATION_SCOPE.md)
+- [Phase 3 Wakanda Spec](docs/SPEC_PHASE3_WAKANDA.md)
+
+## Project Structure
+
+```text
+backend/   FastAPI routes, supervisors, agents, services, models
+ui/        Next.js cockpit
+tests/     Backend unit/integration tests
+db/        Database schema and ORM assets
+docs/      Specs, phase plans, reconciliation notes, handoffs
+```
+
+## Do Not Commit
+
+- `.env*`
+- secrets or API keys
+- `.next/`
+- `node_modules/`
+- logs
+- caches
+- generated churn such as `ui/next-env.d.ts` unless intentionally scoped
+
+## Current Blockers
+
+Resonance OS source integration is blocked until the decision gate in [docs/RESONANCE_OS_INTEGRATION_SCOPE.md](docs/RESONANCE_OS_INTEGRATION_SCOPE.md) is answered.
