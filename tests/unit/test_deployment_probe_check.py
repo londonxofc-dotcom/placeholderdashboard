@@ -135,6 +135,53 @@ def test_main_returns_failure_when_any_probe_fails(monkeypatch, capsys):
     assert "/ready: fail http=503 status=degraded" in capsys.readouterr().out
 
 
+def test_probe_policy_can_allow_degraded_ready():
+    results = [
+        deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/status", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/ready", 503, "degraded", False),
+    ]
+
+    assert deployment_probe_check.passes_probe_policy(results) is False
+    assert (
+        deployment_probe_check.passes_probe_policy(
+            results,
+            allow_degraded_ready=True,
+        )
+        is True
+    )
+
+
+def test_probe_policy_does_not_allow_other_failures():
+    results = [
+        deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/status", 500, "error", False),
+        deployment_probe_check.ProbeResult("/ready", 503, "degraded", False),
+    ]
+
+    assert (
+        deployment_probe_check.passes_probe_policy(
+            results,
+            allow_degraded_ready=True,
+        )
+        is False
+    )
+
+
+def test_main_can_allow_degraded_ready(monkeypatch):
+    monkeypatch.setattr(
+        deployment_probe_check,
+        "run_probes",
+        lambda base_url, timeout: [
+            deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+            deployment_probe_check.ProbeResult("/status", 200, "ok", True),
+            deployment_probe_check.ProbeResult("/ready", 503, "degraded", False),
+        ],
+    )
+
+    assert deployment_probe_check.main(["--allow-degraded-ready"]) == 0
+
+
 def test_main_returns_success_when_all_probes_pass(monkeypatch):
     monkeypatch.setattr(
         deployment_probe_check,

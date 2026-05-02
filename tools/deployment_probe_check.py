@@ -85,6 +85,25 @@ def render_results(results: list[ProbeResult]) -> str:
     return "\n".join(lines)
 
 
+def passes_probe_policy(
+    results: list[ProbeResult],
+    *,
+    allow_degraded_ready: bool = False,
+) -> bool:
+    for result in results:
+        if result.ok:
+            continue
+        if (
+            allow_degraded_ready
+            and result.path == "/ready"
+            and result.status_code == 503
+            and result.status == "degraded"
+        ):
+            continue
+        return False
+    return True
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Check Mission Control backend health/status/readiness probes."
@@ -100,6 +119,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=3.0,
         help="Per-probe timeout in seconds.",
     )
+    parser.add_argument(
+        "--allow-degraded-ready",
+        action="store_true",
+        help=(
+            "Treat /ready HTTP 503 with status=degraded as acceptable for "
+            "pre-launch host reachability checks."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -107,7 +134,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     results = run_probes(args.base_url, timeout=args.timeout)
     print(render_results(results))
-    return 0 if all(result.ok for result in results) else 1
+    return 0 if passes_probe_policy(
+        results,
+        allow_degraded_ready=args.allow_degraded_ready,
+    ) else 1
 
 
 if __name__ == "__main__":

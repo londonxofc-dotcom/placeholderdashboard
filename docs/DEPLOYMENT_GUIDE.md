@@ -159,6 +159,14 @@ After a backend is running locally or on a host, check the public probes:
 Use the deployed backend base URL for production. The base URL should not
 include `/api`; the checker calls `/health`, `/status`, and `/ready`.
 
+Before all production dependencies are configured, use pre-launch reachability
+mode to allow `/ready` to report `degraded` while still requiring `/health` and
+`/status` to pass:
+
+```bash
+.venv/bin/python tools/deployment_probe_check.py --base-url <backend-base-url> --allow-degraded-ready
+```
+
 For monitor setup, alert triage, and post-deploy smoke expectations, use
 `docs/MONITORING_RUNBOOK.md`.
 

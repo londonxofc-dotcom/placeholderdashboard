@@ -32,6 +32,9 @@ Run these before pointing an uptime monitor at the backend:
 ```
 
 The probe checker expects the backend base URL without `/api`.
+Before secrets and database decisions are complete, add
+`--allow-degraded-ready` to confirm host reachability without treating an
+expected `/ready` degradation as launch-ready.
 
 Before enabling real missions, confirm:
 
