@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 4 is not blank. Core service contracts are already tracked and passing, but runtime integration is incomplete.
+Phase 4 is not blank. Core service contracts are already tracked and passing, with runtime integration proceeding in narrow slices.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -13,7 +13,7 @@ Phase 4 is not blank. Core service contracts are already tracked and passing, bu
 | ABAC role layer | Contract extension landed | `backend/services/abac_enforcer.py` |
 | ABAC role-layer tests | Passing | `tests/unit/test_phase4_abac_enforcer.py` |
 | Runtime memory isolation wiring | Partial | `ExecutorAgent` writes through `MemoryIsolationService`; future read paths still need review |
-| Runtime actor-role propagation | Not complete | Live ABAC calls do not pass `actor_roles` |
+| Runtime actor-role propagation | Batman path landed | API mission state, `BatmanSupervisor`, and `BatmanGraph` pass `actor_roles` into ABAC enforcement |
 | Multi-approver chains | Not started | Still needs approval-flow design |
 | Resonance OS integration | Not specced | Still needs shape/source/surface decision |
 
@@ -23,6 +23,7 @@ Commands run on 2026-05-02:
 
 ```bash
 .venv/bin/python -m pytest tests/unit/test_phase4_memory_isolation.py tests/unit/test_phase4_role_registry.py tests/unit/test_phase4_abac_enforcer.py -v
+.venv/bin/python -m pytest tests/unit/test_mission_abac_policy.py tests/unit/test_batman_graph_phase2.py tests/integration/test_phase2_cockpit_smoke.py -v
 .venv/bin/python -m pytest tests/ -v
 npm --prefix ui run typecheck
 npm --prefix ui run build
@@ -34,7 +35,8 @@ Results:
 | Check | Result |
 |---|---|
 | Phase 4 targeted backend tests | 40 passed |
-| Full backend tests | 206 passed |
+| Actor-role propagation targeted backend tests | 17 passed |
+| Full backend tests | 210 passed |
 | UI typecheck | passed |
 | UI build | passed |
 | Full UI tests | 43 files / 1265 tests passed |
@@ -45,28 +47,40 @@ Results:
 
 Follow-up commit `ad138bc` wired `ExecutorAgent` result writes through `MemoryIsolationService`, proving task result memory is stored under the mission namespace instead of the raw key.
 
+Follow-up commit `10d8ad1` wired mission-scoped `actor_roles` through the Batman route/supervisor execution path and the BatmanGraph ABAC invocation path. Role checks remain backwards-compatible: if `actor_roles` is omitted, Phase 2 policy-only behavior remains unchanged; if roles are supplied, `ABACEnforcer` requires both role permission and mission policy permission.
+
 The correct state is:
 
 - Phase 4 service contracts: partially complete.
-- Phase 4 runtime integration: partial. Executor writes now use the isolation boundary; actor-role propagation and any future cross-mission read paths remain open.
+- Phase 4 runtime integration: partial. Executor writes now use the isolation boundary; Batman actor-role propagation now reaches ABAC enforcement; future cross-mission read paths still need review.
 - Phase 4 docs/planning: now reconciled by this document.
 
 ## Next Implementation Gate
 
-Completed gate: Phase 4 runtime memory isolation wiring for executor writes.
+Completed gates:
+
+- Phase 4 runtime memory isolation wiring for executor writes.
+- Phase 4 Batman actor-role propagation into ABAC enforcement.
 
 Implemented scope:
 
 - `backend/agents/executor.py`
 - `tests/unit/test_executor.py`
+- `backend/api/schemas.py`
+- `backend/api/routes.py`
+- `backend/services/mission_service.py`
+- `backend/agents/supervisor.py`
+- `backend/agents/batman_graph.py`
+- `tests/unit/test_mission_abac_policy.py`
+- `tests/unit/test_batman_graph_phase2.py`
+- `tests/integration/test_phase2_cockpit_smoke.py`
 
-Next recommended gate: Phase 4 actor-role propagation.
+Next recommended gate: Phase 4 tool/role vocabulary alignment.
 
 Allowed scope for that next gate should be limited to:
 
-- API request/route schemas that carry operator role data
-- supervisor methods that pass actor roles forward
-- `backend/agents/batman_graph.py` ABAC invocation path
-- targeted tests proving actor roles affect live tool invocation decisions
+- reconciling `ToolService` names with reviewer defaults and role registry vocabulary
+- tests proving allowed role+policy combinations can execute known tools
+- no new external integrations or live tool side effects
 
 Do not combine that with multi-approver chains or Resonance OS integration. Those should remain separate gates.

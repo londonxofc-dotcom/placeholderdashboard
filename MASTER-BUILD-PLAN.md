@@ -1,10 +1,10 @@
 # Mission Control OS — Master Build Plan
 
 **Current Phase:** Phase 4 reconciliation → integration wiring next
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, role registry ✅, ABAC role-layer tests ✅. Runtime actor-role propagation remains open.
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, executor isolation write path ✅, role registry ✅, ABAC role-layer tests ✅, Batman actor-role propagation ✅.
 **Active Worktrees:** none
 **Blockers:** none
-**Next Approval Gate:** Phase 4 actor-role propagation — route/supervisor actor roles into ABAC enforcement, then multi-approver chain scoping
+**Next Approval Gate:** Phase 4 tool/role vocabulary alignment, then multi-approver chain scoping
 **Session State:** see `current.md` (16D shell — read on session open)
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
@@ -114,8 +114,8 @@
 - [x] Executor memory writes route through `MemoryIsolationService` — `backend/agents/executor.py` + `tests/unit/test_executor.py` (`ad138bc`)
 - [x] Role registry and role-based tool permissions — `backend/services/role_registry.py` + `tests/unit/test_phase4_role_registry.py` (`f153c43`)
 - [x] ABACEnforcer role-layer extension remains backward-compatible — `tests/unit/test_phase4_abac_enforcer.py` (`f153c43`)
+- [x] Batman actor roles propagate through API mission state, `BatmanSupervisor`, and `BatmanGraph` into ABAC enforcement — `backend/api/schemas.py`, `backend/api/routes.py`, `backend/agents/supervisor.py`, `backend/agents/batman_graph.py` (`10d8ad1`)
 - [ ] Audit whether additional supervisor/API memory reads require `MemoryIsolationService`; no cross-mission read path is currently wired.
-- [ ] Propagate `actor_roles` through API/routes/supervisors into ABAC enforcement. Current live BatmanGraph call still invokes `ABACEnforcer.can_invoke_tool()` without roles.
 - [ ] Align `ToolService` registry with reviewer defaults and role registry vocabulary.
 - [ ] Multi-approver chain — still deferred / needs concrete approval flow.
 - [ ] Resonance OS integration scoping — still not specced.
@@ -146,5 +146,5 @@
 
 ---
 
-**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Phase 4 executor memory isolation wiring complete)
+**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Phase 4 Batman actor-role propagation complete)
 **Maintained By:** Mission Architect Agent
