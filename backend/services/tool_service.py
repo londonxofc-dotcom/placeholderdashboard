@@ -38,6 +38,38 @@ class ToolService:
     def _init_tools(self) -> dict:
         """Initialize tool registry (Phase 1 stubs)."""
         return {
+            "text_generator": ToolDefinition(
+                name="text_generator",
+                description="Generate text from a prompt",
+                category="generation",
+                cost_per_use_usd=0.03,
+                requires_approval=False,
+                tags=["generation", "text"],
+            ),
+            "scheduler": ToolDefinition(
+                name="scheduler",
+                description="Schedule an internal task or reminder",
+                category="coordination",
+                cost_per_use_usd=0.01,
+                requires_approval=False,
+                tags=["coordination", "planning"],
+            ),
+            "search": ToolDefinition(
+                name="search",
+                description="Search indexed internal or configured sources",
+                category="research",
+                cost_per_use_usd=0.02,
+                requires_approval=False,
+                tags=["research"],
+            ),
+            "summarizer": ToolDefinition(
+                name="summarizer",
+                description="Summarize supplied content",
+                category="generation",
+                cost_per_use_usd=0.02,
+                requires_approval=False,
+                tags=["generation", "summary"],
+            ),
             "read_file": ToolDefinition(
                 name="read_file",
                 description="Read contents of a file",
@@ -78,6 +110,30 @@ class ToolService:
                 cost_per_use_usd=0.02,
                 requires_approval=False,
                 tags=["research", "internal"]
+            ),
+            "web_search": ToolDefinition(
+                name="web_search",
+                description="Search the web through an approved provider",
+                category="research",
+                cost_per_use_usd=0.03,
+                requires_approval=False,
+                tags=["research", "external"],
+            ),
+            "run_query": ToolDefinition(
+                name="run_query",
+                description="Run a read-only query against an approved data source",
+                category="research",
+                cost_per_use_usd=0.04,
+                requires_approval=False,
+                tags=["research", "data"],
+            ),
+            "send_notification": ToolDefinition(
+                name="send_notification",
+                description="Send an operator-facing notification",
+                category="coordination",
+                cost_per_use_usd=0.01,
+                requires_approval=True,
+                tags=["coordination", "notification"],
             ),
         }
 

@@ -88,6 +88,20 @@ CLEAN_TASK = {
 }
 
 
+TEXT_GENERATOR_TASK = {
+    "id": "t_p3text",
+    "mission_id": "m_p3text",
+    "name": "Draft copy",
+    "description": "Draft a short caption",
+    "suggested_tool": "text_generator",
+    "tool": "text_generator",
+    "parameters": {"prompt": "Draft a caption"},
+    "risk_level": "low",
+    "requires_approval": True,
+    "status": "approved",
+}
+
+
 def _make_supervisor() -> BatmanSupervisor:
     # Decomposer is not used in execute_approved_tasks path
     decomposer = MagicMock()
@@ -157,3 +171,33 @@ class TestSupervisorHonorsPolicy:
         assert summary["review_blocked_count"] == 0
         assert summary["results"][0]["status"] == "blocked"
         assert "Role check blocked" in summary["results"][0]["error"]
+
+    @pytest.mark.asyncio
+    async def test_operator_role_can_execute_policy_allowed_read_file(self):
+        sup = _make_supervisor()
+        summary = await sup.execute_approved_tasks(
+            mission_id="m_p3e",
+            objective="Read contract",
+            all_tasks=[CLEAN_TASK],
+            approved_task_ids=["t_p3a"],
+            abac_policy=WIDE_POLICY,
+            actor_roles=["operator"],
+        )
+
+        assert summary["status"] == "completed"
+        assert summary["results"][0]["status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_reviewer_default_tool_can_execute_when_policy_and_role_allow(self):
+        sup = _make_supervisor()
+        summary = await sup.execute_approved_tasks(
+            mission_id="m_p3f",
+            objective="Draft copy",
+            all_tasks=[TEXT_GENERATOR_TASK],
+            approved_task_ids=["t_p3text"],
+            abac_policy=WIDE_POLICY,
+            actor_roles=["operator"],
+        )
+
+        assert summary["status"] == "completed"
+        assert summary["results"][0]["status"] == "completed"

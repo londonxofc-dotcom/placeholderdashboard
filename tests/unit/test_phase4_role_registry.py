@@ -35,6 +35,18 @@ def test_operator_can_invoke_allowed_tools(registry):
         assert allowed is True, f"Operator should be allowed: {tool}"
 
 
+def test_operator_can_invoke_tool_service_safe_tools(registry):
+    for tool in [
+        "read_file",
+        "search_knowledge",
+        "web_search",
+        "run_query",
+        "send_notification",
+    ]:
+        allowed, _ = registry.can_invoke(["operator"], tool, "batman")
+        assert allowed is True, f"Operator should be allowed: {tool}"
+
+
 def test_operator_cannot_invoke_admin_only_tool(registry):
     allowed, reason = registry.can_invoke(["operator"], "send_email", "batman")
     assert allowed is False

@@ -34,6 +34,10 @@ ROLE_TOOL_PERMISSIONS: Dict[str, Set[str]] = {
         "code_reviewer",
         "memory_reader",
         "web_search",
+        "read_file",
+        "search_knowledge",
+        "run_query",
+        "send_notification",
         "run_code",
         "file_read",
     },
@@ -43,6 +47,8 @@ ROLE_TOOL_PERMISSIONS: Dict[str, Set[str]] = {
         "search",
         "summarizer",
         "memory_reader",
+        "read_file",
+        "search_knowledge",
         "file_read",
     },
 }
@@ -50,6 +56,7 @@ ROLE_TOOL_PERMISSIONS: Dict[str, Set[str]] = {
 # Tools that require admin role regardless of other permissions
 ADMIN_ONLY_TOOLS: Set[str] = {
     "file_write",
+    "write_file",
     "database_write",
     "send_email",
     "send_message",
