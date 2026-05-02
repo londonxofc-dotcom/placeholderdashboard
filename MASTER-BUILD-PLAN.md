@@ -1,10 +1,10 @@
 # Mission Control OS — Master Build Plan
 
-**Current Phase:** 3 closing → Phase 4 entry pending Nick approval
-**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Remaining bullets (ATS tool registry, multi-approver chain, Resonance OS scoping) are Phase-4-deferred or need Nick input.
+**Current Phase:** Phase 4 reconciliation → integration wiring next
+**Progress:** Phase 0: 100% | Phase 1: 100% | Phase 2: 100% | Phase 3: 100% — Jarvis ✅ Wakanda ✅ Cockpit mode switcher ✅ Cockpit page tests ✅. Phase 4 service contracts are partially landed: memory isolation service ✅, role registry ✅, ABAC role-layer tests ✅. Runtime wiring for storage-level memory isolation and actor-role propagation remains open.
 **Active Worktrees:** none
 **Blockers:** none
-**Next Approval Gate:** Phase 4 entry — multi-approver chains, real memory isolation, Resonance OS integration scoping
+**Next Approval Gate:** Phase 4 integration wiring — route/supervisor actor roles, MemoryIsolationService in execution memory writes/reads, then multi-approver chain scoping
 **Session State:** see `current.md` (16D shell — read on session open)
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
@@ -109,10 +109,15 @@
 
 ---
 
-## Phase 4 — Memory Scoping & ABAC (Weeks 11–12)
-- [ ] Full memory isolation per Mission (in progress — MemoryReviewer enforces; storage isolation TBD)
-- [ ] Least-privilege ABAC system (foundation in `ABACEnforcer`; needs role-based extensions)
-- [ ] Role-based tool access
+## Phase 4 — Memory Scoping & ABAC (Weeks 11–12) — PARTIAL / RECONCILED
+- [x] Storage-level memory isolation contract — `backend/services/memory_isolation.py` + `tests/unit/test_phase4_memory_isolation.py` (`f153c43`)
+- [x] Role registry and role-based tool permissions — `backend/services/role_registry.py` + `tests/unit/test_phase4_role_registry.py` (`f153c43`)
+- [x] ABACEnforcer role-layer extension remains backward-compatible — `tests/unit/test_phase4_abac_enforcer.py` (`f153c43`)
+- [ ] Wire `MemoryIsolationService` into execution/supervisor memory reads and writes. `ExecutorAgent` still writes directly through `MemoryService`.
+- [ ] Propagate `actor_roles` through API/routes/supervisors into ABAC enforcement. Current live BatmanGraph call still invokes `ABACEnforcer.can_invoke_tool()` without roles.
+- [ ] Align `ToolService` registry with reviewer defaults and role registry vocabulary.
+- [ ] Multi-approver chain — still deferred / needs concrete approval flow.
+- [ ] Resonance OS integration scoping — still not specced.
 
 ---
 
@@ -140,5 +145,5 @@
 
 ---
 
-**Last Updated:** 2026-04-25 night-build (cockpit page tests + JSDOM fix landed — Phase 3 100%, awaiting Nick approval to enter Phase 4)
+**Last Updated:** 2026-05-02 (Gate G-3 locked, UI typecheck/build restored clean, Phase 4 service-state reconciliation complete)
 **Maintained By:** Mission Architect Agent
