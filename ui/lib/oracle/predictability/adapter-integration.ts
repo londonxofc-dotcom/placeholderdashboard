@@ -74,9 +74,9 @@ function mapSourceTierToReliability(tier: string): string {
   switch (tier) {
     case ADAPTER_SOURCE_TIERS.T0_USER_DIRECT:
       return 'direct_user_assertion'
-    case ADAPTER_SOURCE_TIERS.T1_DIRECT_OBSERVATION:
+    case ADAPTER_SOURCE_TIERS.T1_CANON_LOCKED:
       return 'direct_observation'
-    case ADAPTER_SOURCE_TIERS.T2_VERIFIED:
+    case ADAPTER_SOURCE_TIERS.T2_VERIFIED_MODULE:
       return 'verified_source'
     case ADAPTER_SOURCE_TIERS.T3_SCAFFOLD:
       return 'scaffold_reasoning'
@@ -170,7 +170,7 @@ export function adapterPacketToPredictabilityInput(
       sourceReliability: mapSourceTierToReliability(evidence.sourceTier),
       originalConfidence: evidence.confidence,
       adjustedConfidence: evidence.confidence * multiplier,
-      observedAt: evidence.timestamp,
+      observedAt: evidence.observedAt ?? evidence.provenance?.observedAt ?? '',
     }
   })
 

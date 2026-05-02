@@ -452,7 +452,7 @@ export function evaluateAdapterGate(packet: AdapterPromptContextPacket): Adapter
       createWarning(
         'BLOCKED_VISIBILITY_VIOLATION',
         'Blocked evidence present but no warnings were generated during validation. Ensure blockers are visible to the user.',
-        'error'
+        'block'
       )
     )
   }

@@ -17,6 +17,7 @@ import {
   type AdapterEvidenceItem,
   ADAPTER_SOURCE_TIERS,
   ADAPTER_EVIDENCE_STATUSES,
+  ADAPTER_DOMAINS,
 } from '../evidence-router-adapter-types'
 import { evaluateAdapterGate } from '../adapter-validation'
 
@@ -24,23 +25,43 @@ import { evaluateAdapterGate } from '../adapter-validation'
 // TEST FIXTURES
 // ============================================================================
 
+const OBSERVED_AT = '2026-04-29T00:00:00Z'
+
+const createOutputContract = (
+  forbidAutonomousAction = true
+): AdapterPromptContextPacket['outputContract'] => ({
+  requireProvenanceTrail: true,
+  requireFailureModes: true,
+  requireAssumptions: true,
+  forbidCertaintyLanguage: true,
+  forbidAutonomousAction,
+})
+
+const createEvidenceItem = (overrides: Partial<AdapterEvidenceItem> = {}): AdapterEvidenceItem => ({
+  id: 'evt-1',
+  claim: 'test claim',
+  sourceTier: ADAPTER_SOURCE_TIERS.T0_USER_DIRECT,
+  confidence: 0.8,
+  status: ADAPTER_EVIDENCE_STATUSES.active,
+  observedAt: OBSERVED_AT,
+  domain: ADAPTER_DOMAINS.ORACLE,
+  provenance: {
+    sourceId: 'fixture-source',
+    sourceType: 'unit-test',
+    observedAt: OBSERVED_AT,
+  },
+  tags: [],
+  ...overrides,
+})
+
 const createTestPacket = (overrides?: Partial<AdapterPromptContextPacket>): AdapterPromptContextPacket => ({
   task: 'test task',
   allowedEvidence: [
-    {
-      id: 'evt-1',
-      claim: 'test claim',
-      sourceTier: ADAPTER_SOURCE_TIERS.T0_USER_DIRECT,
-      confidence: 0.8,
-      status: ADAPTER_EVIDENCE_STATUSES.active,
-      timestamp: '2026-04-29T00:00:00Z',
-      domain: 'test-domain',
-      tags: [],
-    },
+    createEvidenceItem(),
   ],
   blockedEvidence: [],
   canonBoundaries: ['no autonomous action', 'preserve canon'],
-  outputContract: { forbidAutonomousAction: true },
+  outputContract: createOutputContract(true),
   warnings: [],
   ...overrides,
 })
@@ -48,61 +69,45 @@ const createTestPacket = (overrides?: Partial<AdapterPromptContextPacket>): Adap
 const createBlockedEvidencePacket = (): AdapterPromptContextPacket => ({
   task: 'test task with blocked',
   allowedEvidence: [
-    {
+    createEvidenceItem({
       id: 'evt-allowed-1',
       claim: 'allowed claim',
-      sourceTier: ADAPTER_SOURCE_TIERS.T0_USER_DIRECT,
       confidence: 0.7,
-      status: ADAPTER_EVIDENCE_STATUSES.active,
-      timestamp: '2026-04-29T00:00:00Z',
-      domain: 'test-domain',
-      tags: [],
-    },
+    }),
   ],
   blockedEvidence: [
-    {
+    createEvidenceItem({
       id: 'evt-blocked-1',
       claim: 'blocked claim',
       sourceTier: ADAPTER_SOURCE_TIERS.T5_UNTRUSTED,
       confidence: 0.5,
       status: ADAPTER_EVIDENCE_STATUSES.blocked,
-      timestamp: '2026-04-29T00:00:00Z',
-      domain: 'test-domain',
-      tags: [],
-    },
+    }),
   ],
   canonBoundaries: ['no autonomous action'],
-  outputContract: { forbidAutonomousAction: true },
+  outputContract: createOutputContract(true),
   warnings: [],
 })
 
 const createDowngradedEvidencePacket = (): AdapterPromptContextPacket => ({
   task: 'test task with downgraded evidence',
   allowedEvidence: [
-    {
+    createEvidenceItem({
       id: 'evt-scaffold-1',
       claim: 'scaffold claim with high confidence',
       sourceTier: ADAPTER_SOURCE_TIERS.T3_SCAFFOLD,
       confidence: 0.9,
-      status: ADAPTER_EVIDENCE_STATUSES.active,
-      timestamp: '2026-04-29T00:00:00Z',
-      domain: 'test-domain',
-      tags: [],
-    },
-    {
+    }),
+    createEvidenceItem({
       id: 'evt-untrusted-1',
       claim: 'untrusted claim with high confidence',
       sourceTier: ADAPTER_SOURCE_TIERS.T5_UNTRUSTED,
       confidence: 0.85,
-      status: ADAPTER_EVIDENCE_STATUSES.active,
-      timestamp: '2026-04-29T00:00:00Z',
-      domain: 'test-domain',
-      tags: [],
-    },
+    }),
   ],
   blockedEvidence: [],
   canonBoundaries: ['preserve boundaries'],
-  outputContract: { forbidAutonomousAction: false },
+  outputContract: createOutputContract(false),
   warnings: [],
 })
 
@@ -111,7 +116,7 @@ const createQuarantinedPacket = (): AdapterPromptContextPacket => ({
   allowedEvidence: [],
   blockedEvidence: [],
   canonBoundaries: [],
-  outputContract: { forbidAutonomousAction: false },
+  outputContract: createOutputContract(false),
   warnings: [],
 })
 
@@ -144,16 +149,11 @@ describe('validateThenAdaptPacket', () => {
   test('preserves validation warnings in integration result', () => {
     const packet = createTestPacket({
       allowedEvidence: [
-        {
+        createEvidenceItem({
           id: 'evt-1',
           claim: 'conflicted claim',
-          sourceTier: ADAPTER_SOURCE_TIERS.T0_USER_DIRECT,
-          confidence: 0.8,
-          status: ADAPTER_EVIDENCE_STATUSES.active,
-          timestamp: '2026-04-29T00:00:00Z',
-          domain: 'test-domain',
           tags: ['conflicted'],
-        },
+        }),
       ],
     })
     const result = validateThenAdaptPacket(packet)
@@ -210,7 +210,7 @@ describe('adapterPacketToPredictabilityInput', () => {
 
   test('preserves outputContract for forecast constraints', () => {
     const packet = createTestPacket({
-      outputContract: { forbidAutonomousAction: true },
+      outputContract: createOutputContract(true),
     })
     const validation = evaluateAdapterGate(packet)
     const input = adapterPacketToPredictabilityInput(packet, validation)
@@ -372,16 +372,11 @@ describe('mathematical critical thinking preservation', () => {
     const packet = createTestPacket({
       task: 'release decision',
       allowedEvidence: [
-        {
+        createEvidenceItem({
           id: 'evt-1',
           claim: 'high confidence narrow evidence',
-          sourceTier: ADAPTER_SOURCE_TIERS.T0_USER_DIRECT,
           confidence: 0.95,
-          status: ADAPTER_EVIDENCE_STATUSES.active,
-          timestamp: '2026-04-29T00:00:00Z',
-          domain: 'test-domain',
-          tags: [],
-        },
+        }),
       ],
     })
 

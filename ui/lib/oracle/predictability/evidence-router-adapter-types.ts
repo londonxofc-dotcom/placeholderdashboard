@@ -149,26 +149,26 @@ export interface AdapterForecastExplanation {
   readonly forecastBand: 'unlikely' | 'possible' | 'likely' | 'strong'
   readonly confidence: number // 0.0–1.0
   readonly evidenceBasis: readonly string[]
-  readonly supportingEvidence: readonly Array<{
+  readonly supportingEvidence: ReadonlyArray<{
     readonly evidenceId: string
     readonly weight: number
   }>
-  readonly opposingEvidence: readonly Array<{
+  readonly opposingEvidence: ReadonlyArray<{
     readonly evidenceId: string
     readonly weight: number
   }>
-  readonly assumptions: readonly Array<{
+  readonly assumptions: ReadonlyArray<{
     readonly assumption: string
     readonly if_wrong_by: string
     readonly forecast_flips: boolean
   }>
   readonly warnings: readonly AdapterWarning[]
-  readonly failureModes: readonly Array<{
+  readonly failureModes: ReadonlyArray<{
     readonly mode: string
     readonly detection: string
   }>
   readonly recommendedNextAction: string
-  readonly provenanceTrail: readonly Array<{
+  readonly provenanceTrail: ReadonlyArray<{
     readonly step: string
     readonly lensUsed: string
     readonly confidenceContribution: number

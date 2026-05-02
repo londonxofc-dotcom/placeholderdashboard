@@ -282,8 +282,9 @@ export function assertModelStageOrchestrationSafetyFlags(
   ]
 
   for (const name of flagNames) {
-    if ((flags as Record<string, unknown>)[name] !== true) {
-      errors.push(`Safety flag ${name} must be true, got ${(flags as Record<string, unknown>)[name]}`)
+    const value = flags[name]
+    if (value !== true) {
+      errors.push(`Safety flag ${name} must be true, got ${value}`)
     }
   }
 
