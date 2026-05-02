@@ -82,10 +82,11 @@ Deployment preflight:
 ```bash
 .venv/bin/python tools/deployment_preflight.py
 .venv/bin/python tools/deployment_env_check.py --production
+.venv/bin/python tools/deployment_decision_check.py
 .venv/bin/python tools/deployment_probe_check.py --base-url http://localhost:8000
 ```
 
-The environment check reports variable names and readiness only; it does not print secret values. The probe checker expects a backend base URL without `/api`.
+The environment check reports variable names and readiness only; it does not print secret values. The decision check fails while the deployment decision record still contains `TBD` values. The probe checker expects a backend base URL without `/api`.
 
 ## Operating Modes
 

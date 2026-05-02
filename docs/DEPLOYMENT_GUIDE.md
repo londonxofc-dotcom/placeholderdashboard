@@ -130,6 +130,16 @@ Check deployment environment readiness without printing secret values:
 This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing.
 
+Check that production target decisions have been filled in:
+
+```bash
+.venv/bin/python tools/deployment_decision_check.py
+```
+
+This check fails while `docs/DEPLOYMENT_DECISION_RECORD.md` still contains
+`TBD` values. Keep it failing until the deployment host, database, secrets,
+CORS, access model, and budget decisions are real.
+
 After a backend is running locally or on a host, check the public probes:
 
 ```bash
