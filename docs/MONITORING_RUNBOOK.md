@@ -26,7 +26,7 @@ hard-coding a stale contract.
 Run these before pointing an uptime monitor at the backend:
 
 ```bash
-.venv/bin/python tools/deployment_preflight.py --include-decision-check
+.venv/bin/python tools/deployment_preflight.py --include-decision-check --include-production-env-check
 .venv/bin/python tools/deployment_env_check.py --production
 .venv/bin/python tools/deployment_decision_check.py
 .venv/bin/python tools/deployment_probe_check.py --base-url <backend-base-url>

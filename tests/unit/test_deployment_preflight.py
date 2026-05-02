@@ -29,6 +29,35 @@ def test_build_steps_can_include_decision_check():
     assert steps[0].command[1:] == ("tools/deployment_decision_check.py",)
 
 
+def test_build_steps_can_include_production_env_check():
+    steps = deployment_preflight.build_steps(include_production_env_check=True)
+
+    assert [step.name for step in steps] == [
+        "production environment check",
+        "backend tests",
+        "ui typecheck",
+        "ui build",
+        "ui tests",
+    ]
+    assert steps[0].command[1:] == (
+        "tools/deployment_env_check.py",
+        "--production",
+    )
+
+
+def test_build_steps_runs_launch_checks_before_verification():
+    steps = deployment_preflight.build_steps(
+        include_decision_check=True,
+        include_production_env_check=True,
+    )
+
+    assert [step.name for step in steps[:3]] == [
+        "deployment decision check",
+        "production environment check",
+        "backend tests",
+    ]
+
+
 def test_build_steps_can_run_backend_only():
     steps = deployment_preflight.build_steps(include_backend=True, include_ui=False)
 
@@ -131,3 +160,25 @@ def test_main_can_fail_at_decision_check(monkeypatch, capsys):
     assert code == 1
     assert calls == ["deployment decision check"]
     assert "Preflight failed at: deployment decision check" in capsys.readouterr().err
+
+
+def test_main_can_fail_at_production_env_check(monkeypatch, capsys):
+    calls: list[str] = []
+
+    def fake_run_step(step):
+        calls.append(step.name)
+        return 1 if step.name == "production environment check" else 0
+
+    monkeypatch.setattr(deployment_preflight, "run_step", fake_run_step)
+    monkeypatch.setattr(deployment_preflight, "protected_file_status", lambda: "")
+
+    code = deployment_preflight.main(
+        ["--backend-only", "--include-production-env-check"]
+    )
+
+    assert code == 1
+    assert calls == ["production environment check"]
+    assert (
+        "Preflight failed at: production environment check"
+        in capsys.readouterr().err
+    )

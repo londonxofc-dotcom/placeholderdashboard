@@ -30,6 +30,7 @@ def build_steps(
     include_ui: bool = True,
     skip_ui_build: bool = False,
     include_decision_check: bool = False,
+    include_production_env_check: bool = False,
 ) -> list[Step]:
     steps: list[Step] = []
     if include_decision_check:
@@ -37,6 +38,13 @@ def build_steps(
             Step(
                 "deployment decision check",
                 (sys.executable, "tools/deployment_decision_check.py"),
+            )
+        )
+    if include_production_env_check:
+        steps.append(
+            Step(
+                "production environment check",
+                (sys.executable, "tools/deployment_env_check.py", "--production"),
             )
         )
     if include_backend:
@@ -124,6 +132,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Fail if docs/DEPLOYMENT_DECISION_RECORD.md still has TBD values.",
     )
+    parser.add_argument(
+        "--include-production-env-check",
+        action="store_true",
+        help="Fail if production deployment environment variables are not ready.",
+    )
     return parser.parse_args(argv)
 
 
@@ -140,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         include_ui=include_ui,
         skip_ui_build=args.skip_ui_build,
         include_decision_check=args.include_decision_check,
+        include_production_env_check=args.include_production_env_check,
     )
 
     protected_status = protected_file_status()

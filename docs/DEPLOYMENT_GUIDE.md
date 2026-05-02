@@ -108,8 +108,15 @@ For launch-gate verification, include the deployment decision record check:
 .venv/bin/python tools/deployment_preflight.py --include-decision-check
 ```
 
+To include both launch-gate decisions and production environment readiness:
+
+```bash
+.venv/bin/python tools/deployment_preflight.py --include-decision-check --include-production-env-check
+```
+
 This variant is expected to fail until `docs/DEPLOYMENT_DECISION_RECORD.md`
-has real target, secrets, access, and budget decisions.
+has real target, secrets, access, and budget decisions, and until production
+environment variables are configured.
 
 Or run the checks directly:
 
