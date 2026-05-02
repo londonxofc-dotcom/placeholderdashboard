@@ -33,7 +33,8 @@ Run these before pointing an uptime monitor at the backend:
 ```
 
 The probe checker expects the backend base URL without `/api`, and fails fast
-if `/api` is included in the base URL path.
+if `/api` is included in the base URL path. It also verifies the expected JSON
+status values for each probe.
 Before secrets and database decisions are complete, add
 `--allow-degraded-ready` to confirm host reachability without treating an
 expected `/ready` degradation as launch-ready.

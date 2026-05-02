@@ -13,6 +13,11 @@ from urllib.request import urlopen
 
 
 PROBES = ("/health", "/status", "/ready")
+EXPECTED_STATUSES = {
+    "/health": "ok",
+    "/status": "ok",
+    "/ready": "ready",
+}
 
 
 @dataclass(frozen=True)
@@ -97,7 +102,10 @@ def passes_probe_policy(
     allow_degraded_ready: bool = False,
 ) -> bool:
     for result in results:
-        if result.ok:
+        expected_status = EXPECTED_STATUSES.get(result.path)
+        if result.ok and (
+            expected_status is None or result.status == expected_status
+        ):
             continue
         if (
             allow_degraded_ready

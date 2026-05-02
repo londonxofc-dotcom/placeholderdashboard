@@ -176,6 +176,26 @@ def test_probe_policy_does_not_allow_other_failures():
     )
 
 
+def test_probe_policy_requires_expected_json_statuses():
+    results = [
+        deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/status", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/ready", 200, "ok", True),
+    ]
+
+    assert deployment_probe_check.passes_probe_policy(results) is False
+
+
+def test_probe_policy_allows_expected_json_statuses():
+    results = [
+        deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/status", 200, "ok", True),
+        deployment_probe_check.ProbeResult("/ready", 200, "ready", True),
+    ]
+
+    assert deployment_probe_check.passes_probe_policy(results) is True
+
+
 def test_main_can_allow_degraded_ready(monkeypatch):
     monkeypatch.setattr(
         deployment_probe_check,
