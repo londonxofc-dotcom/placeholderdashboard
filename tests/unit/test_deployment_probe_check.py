@@ -143,6 +143,31 @@ def test_main_returns_failure_when_any_probe_fails(monkeypatch, capsys):
     assert "/ready: fail http=503 status=degraded" in capsys.readouterr().out
 
 
+def test_render_results_marks_status_mismatch_as_failure():
+    report = deployment_probe_check.render_results(
+        [
+            deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+            deployment_probe_check.ProbeResult("/status", 200, "ok", True),
+            deployment_probe_check.ProbeResult("/ready", 200, "ok", True),
+        ]
+    )
+
+    assert "/ready: fail http=200 status=ok" in report
+
+
+def test_render_results_can_mark_degraded_ready_as_prelaunch_ok():
+    report = deployment_probe_check.render_results(
+        [
+            deployment_probe_check.ProbeResult("/health", 200, "ok", True),
+            deployment_probe_check.ProbeResult("/status", 200, "ok", True),
+            deployment_probe_check.ProbeResult("/ready", 503, "degraded", False),
+        ],
+        allow_degraded_ready=True,
+    )
+
+    assert "/ready: ok http=503 status=degraded" in report
+
+
 def test_probe_policy_can_allow_degraded_ready():
     results = [
         deployment_probe_check.ProbeResult("/health", 200, "ok", True),

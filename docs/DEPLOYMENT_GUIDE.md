@@ -165,7 +165,8 @@ Use the deployed backend base URL for production. The base URL should not
 include `/api`; the checker calls `/health`, `/status`, and `/ready`, and
 fails fast if `/api` is included in the base URL path. It also verifies the
 expected JSON status values: `/health` and `/status` must report `ok`, and
-`/ready` must report `ready`.
+`/ready` must report `ready`. The printed verdict uses the same policy as the
+exit code.
 
 Before all production dependencies are configured, use pre-launch reachability
 mode to allow `/ready` to report `degraded` while still requiring `/health` and

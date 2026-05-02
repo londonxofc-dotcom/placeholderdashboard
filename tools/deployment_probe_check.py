@@ -87,11 +87,38 @@ def run_probes(
     ]
 
 
-def render_results(results: list[ProbeResult]) -> str:
+def probe_passes_policy(
+    result: ProbeResult,
+    *,
+    allow_degraded_ready: bool = False,
+) -> bool:
+    expected_status = EXPECTED_STATUSES.get(result.path)
+    if result.ok and (expected_status is None or result.status == expected_status):
+        return True
+    return (
+        allow_degraded_ready
+        and result.path == "/ready"
+        and result.status_code == 503
+        and result.status == "degraded"
+    )
+
+
+def render_results(
+    results: list[ProbeResult],
+    *,
+    allow_degraded_ready: bool = False,
+) -> str:
     lines = ["Deployment probe check"]
     for result in results:
         code = result.status_code if result.status_code is not None else "n/a"
-        verdict = "ok" if result.ok else "fail"
+        verdict = (
+            "ok"
+            if probe_passes_policy(
+                result,
+                allow_degraded_ready=allow_degraded_ready,
+            )
+            else "fail"
+        )
         lines.append(f"- {result.path}: {verdict} http={code} status={result.status}")
     return "\n".join(lines)
 
@@ -102,16 +129,9 @@ def passes_probe_policy(
     allow_degraded_ready: bool = False,
 ) -> bool:
     for result in results:
-        expected_status = EXPECTED_STATUSES.get(result.path)
-        if result.ok and (
-            expected_status is None or result.status == expected_status
-        ):
-            continue
-        if (
-            allow_degraded_ready
-            and result.path == "/ready"
-            and result.status_code == 503
-            and result.status == "degraded"
+        if probe_passes_policy(
+            result,
+            allow_degraded_ready=allow_degraded_ready,
         ):
             continue
         return False
@@ -154,7 +174,12 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     results = run_probes(args.base_url, timeout=args.timeout)
-    print(render_results(results))
+    print(
+        render_results(
+            results,
+            allow_degraded_ready=args.allow_degraded_ready,
+        )
+    )
     return 0 if passes_probe_policy(
         results,
         allow_degraded_ready=args.allow_degraded_ready,
