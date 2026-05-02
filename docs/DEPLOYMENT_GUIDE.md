@@ -51,6 +51,17 @@ Start backend:
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Check backend liveness and readiness:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/ready
+```
+
+`/health` is a lightweight liveness probe. `/ready` checks deployment readiness
+and returns dependency status for the API router and database without exposing
+connection strings, secrets, or raw exception text.
+
 Start UI:
 
 ```bash
@@ -90,6 +101,12 @@ npm --prefix ui test
 
 If UI build touches `ui/next-env.d.ts`, restore it unless that generated file is intentionally in scope.
 
+For backend deployment probes, also verify:
+
+```bash
+.venv/bin/python -m pytest tests/unit/test_backend_health.py -v
+```
+
 ## Production Deployment Decision Points
 
 Before writing deployment config, decide:
@@ -110,6 +127,7 @@ Conservative first pass:
 - Frontend on Vercel or Netlify with `NEXT_PUBLIC_API_URL` pointing to backend `/api`.
 - Secrets only in host environment settings.
 - CORS locked to the deployed cockpit URL.
+- Backend host readiness probe pointed at `/ready`; liveness probe pointed at `/health`.
 - No real external music/label integrations until a workflow-specific gate is approved.
 
 ## Non-Goals

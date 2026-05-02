@@ -1,0 +1,77 @@
+import sys
+from unittest.mock import MagicMock, patch
+
+import httpx
+
+
+def _get_app():
+    if "backend.main" not in sys.modules:
+        mock_engine = MagicMock()
+        mock_engine.connect.return_value.__enter__ = MagicMock(return_value=MagicMock())
+        mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+        with patch("sqlalchemy.create_engine", return_value=mock_engine), patch(
+            "backend.db.session.init_db", return_value=None
+        ):
+            import backend.main  # noqa: F401
+
+    from backend.main import app
+
+    return app
+
+
+async def test_health_reports_current_phase_without_dependency_checks():
+    app = _get_app()
+    transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/health")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ok"
+    assert body["version"] == "0.0.1"
+    assert body["phase"] == "Phase 5 - Polish & Launch"
+
+
+async def test_ready_reports_ready_when_database_check_passes():
+    app = _get_app()
+    connection = MagicMock()
+    connect = MagicMock()
+    connect.return_value.__enter__.return_value = connection
+    connect.return_value.__exit__.return_value = False
+
+    with patch("backend.main.engine.connect", connect), patch.dict(
+        "os.environ", {"ENV": "test"}, clear=False
+    ):
+        transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/ready")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ready"
+    assert body["environment"] == "test"
+    assert body["checks"]["database"] == {"status": "ok"}
+    assert body["checks"]["api_router"] == {"status": "ok", "prefix": "/api"}
+    assert body["phase"] == "Phase 5 - Polish & Launch"
+    assert "checked_at" in body
+    connection.execute.assert_called_once()
+
+
+async def test_ready_reports_degraded_without_leaking_database_details():
+    app = _get_app()
+    connect = MagicMock(side_effect=RuntimeError("password=secret host=prod"))
+
+    with patch("backend.main.engine.connect", connect):
+        transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/ready")
+
+    assert resp.status_code == 503
+    body = resp.json()
+    assert body["status"] == "degraded"
+    assert body["checks"]["database"] == {
+        "status": "error",
+        "message": "RuntimeError",
+    }
+    assert "secret" not in str(body).lower()

@@ -1,12 +1,19 @@
-"""FastAPI Application Entry Point - Mission Control OS Phase 1"""
+"""FastAPI Application Entry Point - Mission Control OS."""
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+
+from sqlalchemy import text
 
 from backend.api import routes
-from backend.db.session import init_db
+from backend.db.session import engine, init_db
+
+APP_VERSION = "0.0.1"
+APP_PHASE = "Phase 5 - Polish & Launch"
 
 # Lifespan context for startup/shutdown
 @asynccontextmanager
@@ -23,7 +30,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Mission Control OS",
     description="AI orchestration system with BATMAN/JARVIS/WAKANDA modes",
-    version="0.0.1",
+    version=APP_VERSION,
     lifespan=lifespan
 )
 
@@ -47,12 +54,47 @@ app.include_router(routes.router, prefix="/api", tags=["missions"])
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Lightweight liveness check."""
     return {
         "status": "ok",
-        "version": "0.0.1",
-        "phase": "Phase 1 - Batman Mode MVP"
+        "version": APP_VERSION,
+        "phase": APP_PHASE,
     }
+
+
+@app.get("/ready")
+async def readiness_check():
+    """Deployment readiness check with non-secret dependency status."""
+    checked_at = datetime.now(timezone.utc).isoformat()
+    env_name = os.getenv("ENV", "dev")
+    database = _check_database()
+    ready = database["status"] == "ok"
+
+    payload = {
+        "status": "ready" if ready else "degraded",
+        "version": APP_VERSION,
+        "phase": APP_PHASE,
+        "environment": env_name,
+        "checked_at": checked_at,
+        "checks": {
+            "database": database,
+            "api_router": {"status": "ok", "prefix": "/api"},
+        },
+    }
+    status_code = 200 if ready else 503
+    return JSONResponse(payload, status_code=status_code)
+
+
+def _check_database() -> dict[str, str]:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "status": "error",
+            "message": exc.__class__.__name__,
+        }
+    return {"status": "ok"}
 
 # Documentation
 @app.get("/")
