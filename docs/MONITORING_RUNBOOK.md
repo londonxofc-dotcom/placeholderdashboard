@@ -14,7 +14,8 @@ on a production host, and before enabling real missions.
 
 The `/ready` response must never expose database URLs, API key values, raw
 exceptions, or connection strings. It should name only the failing dependency
-class, such as `database` or `anthropic_api_key`.
+class, such as `database` or `anthropic_api_key`. Placeholder secret values
+must be treated as missing, not ready.
 
 The `/status` response should include the canonical probe paths for `/health`,
 `/status`, and `/ready` so monitors can discover the expected surfaces without

@@ -15,6 +15,13 @@ from backend.db.session import engine, init_db
 APP_VERSION = "0.0.1"
 APP_PHASE = "Phase 5 - Polish & Launch"
 STARTED_AT = datetime.now(timezone.utc)
+PLACEHOLDER_SECRET_VALUES = {
+    "",
+    "your-api-key-here",
+    "changeme",
+    "change-me",
+    "placeholder",
+}
 
 # Lifespan context for startup/shutdown
 @asynccontextmanager
@@ -130,7 +137,8 @@ def _check_database() -> dict[str, str]:
 
 
 def _check_required_secret(name: str) -> dict[str, str]:
-    if os.getenv(name):
+    value = os.getenv(name)
+    if value and value.strip().lower() not in PLACEHOLDER_SECRET_VALUES:
         return {"status": "ok"}
     return {
         "status": "missing",

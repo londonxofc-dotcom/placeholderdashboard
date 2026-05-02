@@ -148,3 +148,27 @@ async def test_ready_reports_degraded_when_anthropic_key_is_missing():
         "status": "missing",
         "message": "ANTHROPIC_API_KEY is not configured",
     }
+
+
+async def test_ready_reports_degraded_when_anthropic_key_is_placeholder():
+    app = _get_app()
+    connection = MagicMock()
+    connect = MagicMock()
+    connect.return_value.__enter__.return_value = connection
+    connect.return_value.__exit__.return_value = False
+
+    with patch("backend.main.engine.connect", connect), patch.dict(
+        "os.environ", {"ANTHROPIC_API_KEY": "your-api-key-here"}, clear=False
+    ):
+        transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/ready")
+
+    assert resp.status_code == 503
+    body = resp.json()
+    assert body["status"] == "degraded"
+    assert body["checks"]["database"] == {"status": "ok"}
+    assert body["checks"]["anthropic_api_key"] == {
+        "status": "missing",
+        "message": "ANTHROPIC_API_KEY is not configured",
+    }

@@ -65,7 +65,8 @@ snapshot for monitors and dashboards, including uptime and the `/health`,
 `/ready` checks deployment readiness
 and returns dependency status for the API router, database, and required
 Claude credential presence without exposing connection strings, secret values,
-or raw exception text.
+or raw exception text. Placeholder secret values such as `your-api-key-here`
+are treated as missing.
 
 Start UI:
 
