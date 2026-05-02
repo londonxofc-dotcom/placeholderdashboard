@@ -142,6 +142,7 @@ Task result memory writes route through `MemoryIsolationService` for `ExecutorAg
 
 - [Operator Guide](docs/OPERATOR_GUIDE.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
+- [Deployment Decision Record](docs/DEPLOYMENT_DECISION_RECORD.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Phase 4 Memory / ABAC Reconciliation](docs/PHASE_4_MEMORY_ABAC_RECONCILIATION.md)
 - [Resonance OS Integration Scope](docs/RESONANCE_OS_INTEGRATION_SCOPE.md)

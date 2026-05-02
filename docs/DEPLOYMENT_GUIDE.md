@@ -141,6 +141,9 @@ include `/api`; the checker calls `/health`, `/status`, and `/ready`.
 
 ## Production Deployment Decision Points
 
+Record these decisions in `docs/DEPLOYMENT_DECISION_RECORD.md` before adding
+host-specific deployment config.
+
 Before writing deployment config, decide:
 
 1. Backend host: Railway, Render, Fly, VPS, or other.
