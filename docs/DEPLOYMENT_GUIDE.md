@@ -142,6 +142,9 @@ This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing, and
 rejects wildcard `ALLOWED_ORIGINS` in production mode.
 
+At runtime, wildcard CORS entries are ignored. If no exact origins remain, the
+backend falls back to local cockpit development origin `http://localhost:3000`.
+
 Check that production target decisions have been filled in:
 
 ```bash

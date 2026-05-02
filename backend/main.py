@@ -44,7 +44,11 @@ app = FastAPI(
 
 
 def _parse_allowed_origins(raw: str) -> list[str]:
-    origins = [origin.strip() for origin in raw.split(",") if origin.strip()]
+    origins = [
+        origin.strip()
+        for origin in raw.split(",")
+        if origin.strip() and origin.strip() != "*"
+    ]
     return origins or ["http://localhost:3000"]
 
 # CORS middleware.

@@ -94,6 +94,7 @@ Treat this as dependency or credential readiness failure.
 ## Launch Guardrails
 
 - Do not use placeholder environment values.
+- Do not rely on wildcard CORS origins; runtime parsing ignores `*`.
 - Do not expose the cockpit publicly until the access-control decision is
   recorded.
 - Do not add real external music, label, or publishing integrations as part of

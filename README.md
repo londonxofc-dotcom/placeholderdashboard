@@ -87,7 +87,7 @@ Deployment preflight:
 .venv/bin/python tools/deployment_probe_check.py --base-url http://localhost:8000
 ```
 
-The environment check reports variable names and readiness only; it does not print secret values, and it rejects wildcard production CORS origins. The decision check fails while the deployment decision record still contains `TBD` values. The probe checker expects a backend base URL without `/api`; use `--allow-degraded-ready` only for pre-launch reachability checks.
+The environment check reports variable names and readiness only; it does not print secret values, and it rejects wildcard production CORS origins. Runtime CORS parsing also ignores wildcard entries. The decision check fails while the deployment decision record still contains `TBD` values. The probe checker expects a backend base URL without `/api`; use `--allow-degraded-ready` only for pre-launch reachability checks.
 
 ## Operating Modes
 
