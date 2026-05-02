@@ -38,6 +38,9 @@ import {
   type ModelStageOrchestrationContractVersion,
   type ModelStageReference,
   type AdapterToKernelBridgeContract,
+  type BridgeFieldAudit,
+  type BridgeResult,
+  type LossyTransformRecord,
   type ModelStageDependencyEdge,
   type ModelStageOrchestrationSafetyFlags,
   type ModelStageOrchestrationInput,
@@ -338,6 +341,234 @@ describe('ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT', () => {
     if (ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT.bridgeApplied) {
       expect(ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT.unbridgedWarning).toBe(false)
     }
+  })
+})
+
+// ============================================================================
+// G-3.1 BRIDGE RESULT CONTRACTS
+// ============================================================================
+
+describe('LossyTransformRecord', () => {
+  it('captures target field, source field, transform rule, and information loss', () => {
+    const record: LossyTransformRecord = {
+      targetField: 'historicalEvents.0.sourceTier',
+      sourceField: 'historicalEvents.0.sourceReliability',
+      transformRule: 'sourceReliability mapped to conservative kernel tier',
+      informationLost: 'adapter source reliability label does not preserve raw source tier',
+    }
+
+    expect(record.targetField).toBe('historicalEvents.0.sourceTier')
+    expect(record.sourceField).toBe('historicalEvents.0.sourceReliability')
+    expect(record.transformRule.length).toBeGreaterThan(0)
+    expect(record.informationLost.length).toBeGreaterThan(0)
+  })
+})
+
+describe('BridgeFieldAudit', () => {
+  it('tracks derived, supplemented, defaulted, unmappable, and lossy fields', () => {
+    const audit: BridgeFieldAudit = {
+      derivedFields: ['objective', 'historicalEvents', 'landmarkEvents'],
+      supplementedFields: [
+        'targetDate',
+        'domain',
+        'horizon',
+        'trendWindows',
+        'behavioralPatterns',
+        'cycleWindows',
+      ],
+      defaultedFields: [
+        'historicalEvents.0.eventType',
+        'historicalEvents.0.magnitude',
+        'historicalEvents.0.affectedSignals',
+        'historicalEvents.0.createsRegimeShift',
+        'historicalEvents.0.tags',
+      ],
+      unmappableFields: [],
+      lossyTransforms: [
+        {
+          targetField: 'historicalEvents.0.sourceTier',
+          sourceField: 'historicalEvents.0.sourceReliability',
+          transformRule: 'sourceReliability mapped to conservative kernel tier',
+          informationLost: 'adapter source reliability label does not preserve raw source tier',
+        },
+      ],
+    }
+
+    expect(audit.derivedFields).toHaveLength(3)
+    expect(audit.supplementedFields).toHaveLength(6)
+    expect(audit.defaultedFields.length).toBeGreaterThan(0)
+    expect(audit.unmappableFields).toHaveLength(0)
+    expect(audit.lossyTransforms).toHaveLength(1)
+  })
+})
+
+describe('BridgeResult', () => {
+  const fieldAudit: BridgeFieldAudit = {
+    derivedFields: ['objective', 'historicalEvents', 'landmarkEvents'],
+    supplementedFields: [
+      'targetDate',
+      'domain',
+      'horizon',
+      'trendWindows',
+      'behavioralPatterns',
+      'cycleWindows',
+    ],
+    defaultedFields: [
+      'historicalEvents.0.eventType',
+      'historicalEvents.0.magnitude',
+      'historicalEvents.0.affectedSignals',
+      'historicalEvents.0.createsRegimeShift',
+      'historicalEvents.0.tags',
+    ],
+    unmappableFields: [],
+    lossyTransforms: [
+      {
+        targetField: 'historicalEvents.0.sourceTier',
+        sourceField: 'historicalEvents.0.sourceReliability',
+        transformRule: 'sourceReliability mapped to conservative kernel tier',
+        informationLost: 'adapter source reliability label does not preserve raw source tier',
+      },
+    ],
+  }
+
+  it('represents a successful bridged kernel-native output shape', () => {
+    const result: BridgeResult = {
+      success: true,
+      kernelInput: {
+        targetDate: '2026-06-01',
+        domain: 'BATMAN',
+        objective: 'Forecast trend direction for signal X',
+        horizon: 'medium',
+        historicalEvents: [
+          {
+            id: 'ev-001',
+            timestamp: '2026-05-02T00:00:00Z',
+            domain: 'BATMAN',
+            eventType: 'adapter_historical_event',
+            description: 'Signal rose 15% over 3 windows',
+            impact: 'positive',
+            magnitude: 0.8,
+            affectedSignals: ['signal-x'],
+            createsRegimeShift: false,
+            confidence: 0.8,
+            sourceTier: 'T2',
+            tags: ['bridged'],
+          },
+        ],
+        trendWindows: [
+          {
+            id: 'trend-001',
+            label: 'Signal X 30-day trend',
+            start: '2026-05-01',
+            end: '2026-05-31',
+            scale: 'meso',
+            signalType: 'signal-x',
+            value: 0.64,
+            confidence: 0.72,
+            sourceTier: 'T2',
+          },
+        ],
+        landmarkEvents: [
+          {
+            id: 'ev-001',
+            timestamp: '2026-05-02T00:00:00Z',
+            domain: 'BATMAN',
+            eventType: 'adapter_historical_event',
+            description: 'Signal rose 15% over 3 windows',
+            impact: 'positive',
+            magnitude: 0.8,
+            affectedSignals: ['signal-x'],
+            createsRegimeShift: false,
+            confidence: 0.8,
+            sourceTier: 'T2',
+            tags: ['bridged'],
+          },
+        ],
+        behavioralPatterns: [
+          {
+            id: 'pattern-001',
+            actorScope: 'organization',
+            triggerCondition: 'Signal X exceeds baseline',
+            repeatedBehavior: 'Response cadence increases',
+            observedCount: 3,
+            positiveOutcomes: 2,
+            negativeOutcomes: 0,
+            neutralOutcomes: 1,
+            confidence: 0.7,
+            sourceTier: 'T2',
+            tags: ['supplemented'],
+          },
+        ],
+        cycleWindows: [
+          {
+            period: 30,
+            scale: 'meso',
+            confidence: 0.66,
+            lastObserved: '2026-05-31',
+          },
+        ],
+      },
+      bridgeContract: ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT,
+      errors: [],
+      warnings: [],
+      fieldAudit,
+    }
+
+    expect(result.success).toBe(true)
+    expect(result.kernelInput?.historicalEvents).toHaveLength(1)
+    expect(result.kernelInput?.landmarkEvents).toHaveLength(1)
+    expect(result.bridgeContract.bridgeStatus).toBe('applied')
+    expect(result.fieldAudit.lossyTransforms).toHaveLength(1)
+  })
+
+  it('allows failed bridge results to omit kernelInput and retain audit data', () => {
+    const failedContract: AdapterToKernelBridgeContract = {
+      ...ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT,
+      bridgeStatus: 'failed',
+      inputTypePath: 'adapter_local',
+      supplementedFields: ['targetDate', 'domain'],
+      unmappableFields: ['trendWindows'],
+      unbridgedWarning: true,
+      bridgeApplied: false,
+    }
+
+    const result: BridgeResult = {
+      success: false,
+      bridgeContract: failedContract,
+      errors: ['Missing required supplemented field: trendWindows'],
+      warnings: ['Bridge failed closed before kernel execution'],
+      fieldAudit: {
+        ...fieldAudit,
+        unmappableFields: ['trendWindows'],
+      },
+    }
+
+    expect(result.success).toBe(false)
+    expect(result.kernelInput).toBeUndefined()
+    expect(result.bridgeContract.bridgeApplied).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(result.fieldAudit.unmappableFields).toEqual(['trendWindows'])
+  })
+
+  it('keeps bridge contract field buckets aligned with field audit buckets', () => {
+    const result: BridgeResult = {
+      success: true,
+      bridgeContract: ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT,
+      errors: [],
+      warnings: [],
+      fieldAudit: {
+        derivedFields: ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT.derivedFields,
+        supplementedFields: ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT.supplementedFields,
+        defaultedFields: ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT.defaultedFields,
+        unmappableFields: ORCHESTRATION_EXAMPLE_BRIDGE_CONTRACT.unmappableFields,
+        lossyTransforms: [],
+      },
+    }
+
+    expect(result.fieldAudit.derivedFields).toEqual(result.bridgeContract.derivedFields)
+    expect(result.fieldAudit.supplementedFields).toEqual(result.bridgeContract.supplementedFields)
+    expect(result.fieldAudit.defaultedFields).toEqual(result.bridgeContract.defaultedFields)
+    expect(result.fieldAudit.unmappableFields).toEqual(result.bridgeContract.unmappableFields)
   })
 })
 

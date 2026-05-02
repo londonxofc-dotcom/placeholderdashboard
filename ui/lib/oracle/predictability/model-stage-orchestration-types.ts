@@ -111,6 +111,97 @@ export interface AdapterToKernelBridgeContract {
 }
 
 // ============================================================================
+// G-3.1 BRIDGE RESULT CONTRACTS
+// ============================================================================
+
+export interface LossyTransformRecord {
+  readonly targetField: string
+  readonly sourceField: string
+  readonly transformRule: string
+  readonly informationLost: string
+}
+
+export interface BridgeFieldAudit {
+  readonly derivedFields: readonly string[]
+  readonly supplementedFields: readonly string[]
+  readonly defaultedFields: readonly string[]
+  readonly unmappableFields: readonly string[]
+  readonly lossyTransforms: readonly LossyTransformRecord[]
+}
+
+export interface BridgeResult {
+  readonly success: boolean
+  readonly kernelInput?: {
+    readonly targetDate: string
+    readonly domain: string
+    readonly objective: string
+    readonly horizon: 'short' | 'medium' | 'long'
+    readonly historicalEvents: readonly {
+      readonly id: string
+      readonly timestamp: string
+      readonly domain: string
+      readonly eventType: string
+      readonly description: string
+      readonly impact: 'positive' | 'negative' | 'mixed' | 'unknown'
+      readonly magnitude: number
+      readonly affectedSignals: readonly string[]
+      readonly createsRegimeShift: boolean
+      readonly confidence: number
+      readonly sourceTier: 'T0' | 'T1' | 'T2' | 'T3' | 'T4' | 'T5'
+      readonly tags: readonly string[]
+    }[]
+    readonly trendWindows: readonly {
+      readonly id: string
+      readonly label: string
+      readonly start: string
+      readonly end: string
+      readonly scale: 'micro' | 'meso' | 'macro'
+      readonly signalType: string
+      readonly value: number
+      readonly confidence: number
+      readonly sourceTier: 'T0' | 'T1' | 'T2' | 'T3' | 'T4' | 'T5'
+    }[]
+    readonly landmarkEvents: readonly {
+      readonly id: string
+      readonly timestamp: string
+      readonly domain: string
+      readonly eventType: string
+      readonly description: string
+      readonly impact: 'positive' | 'negative' | 'mixed' | 'unknown'
+      readonly magnitude: number
+      readonly affectedSignals: readonly string[]
+      readonly createsRegimeShift: boolean
+      readonly confidence: number
+      readonly sourceTier: 'T0' | 'T1' | 'T2' | 'T3' | 'T4' | 'T5'
+      readonly tags: readonly string[]
+    }[]
+    readonly behavioralPatterns: readonly {
+      readonly id: string
+      readonly actorScope: 'self' | 'contact' | 'organization' | 'market' | 'system'
+      readonly triggerCondition: string
+      readonly repeatedBehavior: string
+      readonly observedCount: number
+      readonly positiveOutcomes: number
+      readonly negativeOutcomes: number
+      readonly neutralOutcomes: number
+      readonly confidence: number
+      readonly sourceTier: 'T0' | 'T1' | 'T2' | 'T3' | 'T4' | 'T5'
+      readonly tags: readonly string[]
+    }[]
+    readonly cycleWindows: readonly {
+      readonly period: number
+      readonly scale: 'micro' | 'meso' | 'macro'
+      readonly confidence: number
+      readonly lastObserved: string
+    }[]
+  }
+  readonly bridgeContract: AdapterToKernelBridgeContract
+  readonly errors: readonly string[]
+  readonly warnings: readonly string[]
+  readonly fieldAudit: BridgeFieldAudit
+}
+
+// ============================================================================
 // MODEL STAGE DEPENDENCY EDGE
 // ============================================================================
 
