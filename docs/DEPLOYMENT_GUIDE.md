@@ -140,7 +140,9 @@ Check deployment environment readiness without printing secret values:
 
 This check reports only variable names and readiness status. It treats empty
 values and obvious placeholders like `your-api-key-here` as missing, and
-rejects wildcard `ALLOWED_ORIGINS` in production mode.
+rejects wildcard `ALLOWED_ORIGINS` in production mode. It also requires
+`NEXT_PUBLIC_API_URL` to point at the backend API prefix ending in `/api`, not
+only the backend base URL.
 
 At runtime, wildcard CORS entries are ignored. If no exact origins remain, the
 backend falls back to local cockpit development origin `http://localhost:3000`.

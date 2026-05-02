@@ -46,6 +46,7 @@ Before enabling real missions, confirm:
 - `/status` returns `ok` and reports the expected phase.
 - `/ready` returns `ready`.
 - `ALLOWED_ORIGINS` contains only exact cockpit origins, never `*`.
+- `NEXT_PUBLIC_API_URL` points at the backend API URL ending in `/api`.
 - `ANTHROPIC_API_KEY` is configured through the deployment host or secret
   manager, never committed.
 - The first production access model is recorded in

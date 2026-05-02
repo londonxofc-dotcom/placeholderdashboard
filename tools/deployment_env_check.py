@@ -7,6 +7,7 @@ import os
 import sys
 from dataclasses import dataclass
 from typing import Mapping
+from urllib.parse import urlparse
 
 
 PLACEHOLDER_VALUES = {
@@ -51,6 +52,8 @@ def is_configured(value: str | None, *, allow_placeholder: bool = False) -> bool
 def is_valid_production_value(name: str, value: str | None) -> bool:
     if value is None:
         return True
+    if name == "NEXT_PUBLIC_API_URL":
+        return has_api_path(value)
     invalid_values = INVALID_PRODUCTION_VALUES.get(name, set())
     normalized_values = {
         item.strip().lower()
@@ -58,6 +61,12 @@ def is_valid_production_value(name: str, value: str | None) -> bool:
         if item.strip()
     }
     return normalized_values.isdisjoint(invalid_values)
+
+
+def has_api_path(value: str) -> bool:
+    parsed = urlparse(value)
+    path_parts = [part for part in parsed.path.split("/") if part]
+    return bool(path_parts) and path_parts[-1] == "api"
 
 
 def check_environment(
