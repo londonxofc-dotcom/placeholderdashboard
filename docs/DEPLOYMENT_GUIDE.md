@@ -163,7 +163,8 @@ Check that production target decisions have been filled in:
 
 This check fails while `docs/DEPLOYMENT_DECISION_RECORD.md` still contains
 `TBD` values. Keep it failing until the deployment host, database, secrets,
-CORS, access model, and budget decisions are real.
+CORS, access model, and budget decisions are real. The report names only
+unresolved line numbers and sections; it does not echo decision row contents.
 
 After a backend is running locally or on a host, check the public probes:
 

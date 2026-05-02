@@ -59,9 +59,7 @@ def render_report(
 
     lines.append("- status: incomplete")
     for item in unresolved:
-        lines.append(
-            f"- line {item.line_number} [{item.section}]: {item.text}"
-        )
+        lines.append(f"- line {item.line_number} [{item.section}]: unresolved")
     return "\n".join(lines)
 
 

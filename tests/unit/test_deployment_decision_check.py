@@ -20,7 +20,7 @@ Use TBD for unknown values.
     unresolved = deployment_decision_check.find_unresolved_decisions(text)
 
     assert unresolved == [
-            deployment_decision_check.UnresolvedDecision(
+        deployment_decision_check.UnresolvedDecision(
             line_number=7,
             section="Status",
             text="- Decision state: TBD",
@@ -72,7 +72,25 @@ def test_render_report_for_incomplete_record():
     )
 
     assert "- status: incomplete" in report
-    assert "line 4 [Status]: - Decision state: TBD" in report
+    assert "line 4 [Status]: unresolved" in report
+    assert "- Decision state: TBD" not in report
+
+
+def test_render_report_does_not_echo_decision_contents():
+    report = deployment_decision_check.render_report(
+        [
+            deployment_decision_check.UnresolvedDecision(
+                line_number=9,
+                section="Required Environment",
+                text="| `DATABASE_URL` | postgresql://user:secret@example/db | TBD |",
+            )
+        ],
+        path=Path("docs/DEPLOYMENT_DECISION_RECORD.md"),
+    )
+
+    assert "postgresql://user:secret@example/db" not in report
+    assert "TBD" not in report
+    assert "line 9 [Required Environment]: unresolved" in report
 
 
 def test_main_returns_failure_for_unresolved_record(tmp_path, capsys):
