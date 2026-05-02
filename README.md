@@ -143,6 +143,7 @@ Task result memory writes route through `MemoryIsolationService` for `ExecutorAg
 - [Operator Guide](docs/OPERATOR_GUIDE.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
 - [Deployment Decision Record](docs/DEPLOYMENT_DECISION_RECORD.md)
+- [Monitoring Runbook](docs/MONITORING_RUNBOOK.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Phase 4 Memory / ABAC Reconciliation](docs/PHASE_4_MEMORY_ABAC_RECONCILIATION.md)
 - [Resonance OS Integration Scope](docs/RESONANCE_OS_INTEGRATION_SCOPE.md)
@@ -170,4 +171,4 @@ docs/      Specs, phase plans, reconciliation notes, handoffs
 
 ## Current Blockers
 
-Resonance OS source integration is blocked until the decision gate in [docs/RESONANCE_OS_INTEGRATION_SCOPE.md](docs/RESONANCE_OS_INTEGRATION_SCOPE.md) is answered.
+Production deployment config is blocked until the target decisions in [docs/DEPLOYMENT_DECISION_RECORD.md](docs/DEPLOYMENT_DECISION_RECORD.md) are answered. Resonance OS source integration is blocked until the decision gate in [docs/RESONANCE_OS_INTEGRATION_SCOPE.md](docs/RESONANCE_OS_INTEGRATION_SCOPE.md) is answered.

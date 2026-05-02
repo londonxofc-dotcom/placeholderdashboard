@@ -139,6 +139,9 @@ After a backend is running locally or on a host, check the public probes:
 Use the deployed backend base URL for production. The base URL should not
 include `/api`; the checker calls `/health`, `/status`, and `/ready`.
 
+For monitor setup, alert triage, and post-deploy smoke expectations, use
+`docs/MONITORING_RUNBOOK.md`.
+
 ## Production Deployment Decision Points
 
 Record these decisions in `docs/DEPLOYMENT_DECISION_RECORD.md` before adding
@@ -166,6 +169,9 @@ Conservative first pass:
 - Dashboards can poll `/status` for version, phase, environment, uptime, and probe paths.
 - `/ready` must return `status: ready` before real missions are enabled; `status: degraded`
   means the host is reachable but a dependency or required credential is missing.
+- Monitoring should track `/health`, `/status`, and `/ready` independently so
+  process failure, runtime drift, and dependency readiness failures are triaged
+  separately.
 - No real external music/label integrations until a workflow-specific gate is approved.
 
 ## Non-Goals
