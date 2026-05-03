@@ -368,5 +368,7 @@ Implementation remains blocked until:
 - the HTTP transport contract is accepted
 - this v1 taxonomy is accepted
 - the exact auth mechanism is chosen
+- the Resonance-side ingestion service is defined in `docs/RESONANCE_OS_INGESTION_SERVICE_SPEC.md`
+- the Resonance-side verification boundary is defined in `docs/RESONANCE_OS_INGESTION_VERIFICATION_SPEC.md`
 - the Resonance-side ingestion service exists
 - a narrow implementation gate is opened for event emission only

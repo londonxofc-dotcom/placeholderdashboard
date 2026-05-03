@@ -16,6 +16,8 @@ Known references:
 - `WAKE_UP_REPORT.md`: explicitly says this needs a conversation, not code.
 - `RESONANCE_WAKANDA_PROFILING_SPEC.md`: candidate first product surface for label-facing resonance profiling.
 - `RESONANCE_WAKANDA_EVENT_TAXONOMY_V1.md`: first approved Wakanda event export set for Resonance.
+- `RESONANCE_OS_INGESTION_SERVICE_SPEC.md`: required external Resonance-side service definition.
+- `RESONANCE_OS_INGESTION_VERIFICATION_SPEC.md`: required verification boundary for that external service.
 
 ## Known
 
@@ -242,3 +244,8 @@ Implementation remains blocked until the following minimum decision is written d
 - Failure mode if Resonance OS is unavailable: bounded retry, then local audit/log only, never mission-blocking
 
 After those are answered, create a new narrow implementation gate. Do not combine it with Phase 5 polish or unrelated mode work.
+
+Mission Control event emission remains blocked until the external service and verification specs are satisfied:
+
+- `docs/RESONANCE_OS_INGESTION_SERVICE_SPEC.md`
+- `docs/RESONANCE_OS_INGESTION_VERIFICATION_SPEC.md`
