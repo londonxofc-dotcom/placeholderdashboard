@@ -14,10 +14,12 @@ Known references:
 - `current.md` signal: Resonance OS was raised at the end of the 2026-04-24 Phase 3 cockpit session.
 - `HANDOFF-2026-04-25.md`: open architecture call — keep memory in `.claude/`, or migrate to Resonance OS as a service.
 - `WAKE_UP_REPORT.md`: explicitly says this needs a conversation, not code.
+- `RESONANCE_WAKANDA_PROFILING_SPEC.md`: candidate first product surface for label-facing resonance profiling.
 
 ## Known
 
 - Resonance OS is important enough to be tracked as a future integration.
+- Working assumption: Resonance OS lives outside this repository as a separate GitHub-backed project.
 - Its shape is not defined in this repo.
 - It may affect the central data plane: memory, audit, orchestration signals, or decomposer context.
 - Incorrect assumptions here have high drift risk because this touches cross-mode memory and Mission Control's source of truth.
@@ -26,8 +28,8 @@ Known references:
 
 Before implementation, answer:
 
-1. What is Resonance OS: separate repo, hosted service, local service, library, or conceptual layer?
-2. Where does it live: local machine, another Nick project, cloud endpoint, package, or documents?
+1. What is Resonance OS: hosted service, local service, library, or conceptual layer exposed from a separate GitHub project?
+2. Where does it live operationally: another repo only, a deployed service from that repo, a local process from that repo, or some combination?
 3. What surface does it expose: API, events, files, memory store, queue, database, or UI?
 4. Integration direction: Mission Control pushes to Resonance OS, pulls from it, or both?
 5. Scope: one Resonance surface per mode, or one cross-mode layer above Batman/Jarvis/Wakanda?
@@ -62,6 +64,8 @@ Once the unknowns are answered, start with the lowest-risk adapter boundary:
 - Keep it best-effort and non-blocking, like `AuditService` persistence.
 - Keep Mission Control's current `MemoryIsolationService` as the enforcement boundary unless Nick explicitly decides Resonance OS replaces memory storage.
 - Add tests before wiring any runtime call.
+
+If a concrete first product surface is needed, prefer the Wakanda-only advisory profiling shape in `docs/RESONANCE_WAKANDA_PROFILING_SPEC.md` before any cross-mode integration.
 
 ## Decision Gate
 
