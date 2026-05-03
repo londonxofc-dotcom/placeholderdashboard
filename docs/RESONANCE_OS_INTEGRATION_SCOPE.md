@@ -23,6 +23,8 @@ Known references:
 - Working assumption: Resonance OS lives outside this repository as a separate GitHub-backed project.
 - Working decision: the first Mission Control integration direction is push-only.
 - Working decision: the first push contract is HTTP event ingestion v1.
+- Working decision: the first auth shape is a signed shared-secret header.
+- Working decision: failure posture is bounded retry, then local audit/log only, never mission-blocking.
 - Its shape is not defined in this repo.
 - It may affect the central data plane: memory, audit, orchestration signals, or decomposer context.
 - Incorrect assumptions here have high drift risk because this touches cross-mode memory and Mission Control's source of truth.
@@ -34,7 +36,7 @@ Before implementation, answer:
 1. What is Resonance OS: hosted service, local service, library, or conceptual layer exposed from a separate GitHub project?
 2. Where does it live operationally: another repo only, a deployed service from that repo, a local process from that repo, or some combination?
 3. What surface does it expose: API, events, files, memory store, queue, database, or UI?
-4. What exact HTTP ingestion shape is used first: endpoint path, auth mechanism, payload envelope, and timeout/retry policy?
+4. What exact HTTP ingestion shape is used first: endpoint path, signed-header format, payload envelope, and timeout/retry policy?
 5. Scope: one Resonance surface per mode, or one cross-mode layer above Batman/Jarvis/Wakanda?
 6. Memory relationship: does it replace, augment, or observe `MemoryService` and `AuditService`?
 
@@ -162,13 +164,45 @@ Exact numeric thresholds remain an implementation-time config decision, but the 
 
 ### Authentication Boundary
 
-The contract assumes authenticated service-to-service delivery, but the exact mechanism is still open:
+The contract assumes authenticated service-to-service delivery.
+
+The preferred first mechanism is:
+
+- signed shared-secret header
+
+Recommended header shape:
+
+- `X-Resonance-Key-Id`: identifies which shared secret is in use
+- `X-Resonance-Timestamp`: UTC request timestamp
+- `X-Resonance-Signature`: signature over timestamp + body
+
+Why this is preferred for v1:
+
+- simpler than mTLS
+- avoids coupling to OAuth/provider setup
+- supports service-to-service verification
+- keeps the first gate narrow and reversible
+
+Deferred alternatives:
 
 - bearer token
-- signed shared secret header
 - mTLS
 
-Mission Control should not embed a provider-specific auth choice into source until the Resonance-side service definition exists.
+Mission Control should not embed a more complex provider-specific auth choice into source until the Resonance-side service definition requires it.
+
+### Failure Policy v1
+
+The first failure policy is:
+
+- delivery is best-effort
+- delivery is asynchronous relative to operator workflow
+- Mission Control retries within bounded limits
+- retries reuse the same `eventId`
+- after retry exhaustion, Mission Control records local audit/log evidence of delivery failure
+- Mission Control does not fail the mission, block approval flow, or roll back completed task execution because Resonance ingestion failed
+- operator-facing workflow remains unchanged unless a future spec explicitly introduces observability UI for export failures
+
+This means Resonance is additive in v1, not load-bearing.
 
 ### Explicit v1 Non-Goals
 
@@ -178,6 +212,7 @@ Mission Control should not embed a provider-specific auth choice into source unt
 - No guarantee that every internal event type is exported
 - No cross-mode export obligation beyond Wakanda in the first gate
 - No replacement of `MemoryService` or `AuditService`
+- No operator-blocking error state when export delivery fails
 
 ### First Export Surface
 
@@ -203,6 +238,7 @@ Implementation remains blocked until the following minimum decision is written d
 - Push contract: HTTP event ingestion v1
 - First surface: Wakanda event taxonomy v1
 - Memory relationship:
-- Failure mode if Resonance OS is unavailable:
+- Auth mechanism: signed shared-secret header
+- Failure mode if Resonance OS is unavailable: bounded retry, then local audit/log only, never mission-blocking
 
 After those are answered, create a new narrow implementation gate. Do not combine it with Phase 5 polish or unrelated mode work.

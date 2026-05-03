@@ -351,6 +351,14 @@ If Resonance OS is unavailable:
 
 This keeps Resonance additive rather than load-bearing in the first gate.
 
+## 10.5 Authentication Posture
+
+For v1, taxonomy events should be delivered using the signed shared-secret header scheme defined in:
+
+`docs/RESONANCE_OS_INTEGRATION_SCOPE.md`
+
+The taxonomy itself does not add per-event auth variance. All event types in this document share the same transport auth boundary.
+
 ---
 
 ## 11. Decision Gate
