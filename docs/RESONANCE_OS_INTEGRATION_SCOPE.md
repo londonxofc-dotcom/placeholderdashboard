@@ -21,6 +21,7 @@ Known references:
 - Resonance OS is important enough to be tracked as a future integration.
 - Working assumption: Resonance OS lives outside this repository as a separate GitHub-backed project.
 - Working decision: the first Mission Control integration direction is push-only.
+- Working decision: the first push contract is HTTP event ingestion v1.
 - Its shape is not defined in this repo.
 - It may affect the central data plane: memory, audit, orchestration signals, or decomposer context.
 - Incorrect assumptions here have high drift risk because this touches cross-mode memory and Mission Control's source of truth.
@@ -32,7 +33,7 @@ Before implementation, answer:
 1. What is Resonance OS: hosted service, local service, library, or conceptual layer exposed from a separate GitHub project?
 2. Where does it live operationally: another repo only, a deployed service from that repo, a local process from that repo, or some combination?
 3. What surface does it expose: API, events, files, memory store, queue, database, or UI?
-4. What exact push contract is used first: HTTP API, queue/event bus, append-only file export, or another async event transport?
+4. What exact HTTP ingestion shape is used first: endpoint path, auth mechanism, payload envelope, and timeout/retry policy?
 5. Scope: one Resonance surface per mode, or one cross-mode layer above Batman/Jarvis/Wakanda?
 6. Memory relationship: does it replace, augment, or observe `MemoryService` and `AuditService`?
 
@@ -74,8 +75,108 @@ The current preferred shape is:
 
 - Resonance OS is external to this repo and maintained as a separate GitHub-backed project.
 - Mission Control pushes append-only Wakanda events outward.
+- Mission Control uses an HTTP event ingestion contract for the first gate.
 - Mission Control does not pull runtime decisions, profiles, or task-routing instructions back from Resonance in the first gate.
 - Resonance failure must not block Batman, Jarvis, or Wakanda execution.
+
+## HTTP Event Ingestion v1
+
+The first transport contract should be a narrow asynchronous HTTP ingestion surface owned by Resonance OS.
+
+### Contract Goals
+
+- Keep Mission Control as the producer only.
+- Keep Resonance OS as the consumer only.
+- Allow append-only event delivery with no synchronous decision dependency.
+- Make retries safe through idempotent event identifiers.
+- Preserve Mission Control execution even when Resonance is slow or unavailable.
+
+### Endpoint Shape
+
+- Method: `POST`
+- Path: `/api/v1/events/ingest`
+- Content type: `application/json`
+- Producer: Mission Control
+- Consumer: Resonance OS
+
+Mission Control should treat any future batch endpoint, pull endpoint, or profile lookup endpoint as out of scope for v1 unless separately approved.
+
+### Payload Envelope
+
+The first payload shape should be a single event envelope:
+
+```json
+{
+  "eventId": "uuid-or-stable-unique-id",
+  "eventVersion": "1",
+  "eventType": "wakanda.release_reviewed",
+  "eventTime": "2026-05-02T14:30:00Z",
+  "sourceSystem": "mission-control",
+  "sourceMode": "wakanda",
+  "missionId": "mission_123",
+  "taskId": "task_456",
+  "subject": {
+    "subjectType": "release",
+    "subjectId": "release_789"
+  },
+  "payload": {
+    "status": "approved",
+    "operatorId": "ats_operator",
+    "signals": ["metadata_ready", "campaign_active"]
+  }
+}
+```
+
+### Required Envelope Fields
+
+| Field | Purpose |
+|---|---|
+| `eventId` | Idempotency key so retries do not create duplicate downstream facts |
+| `eventVersion` | Contract version for future schema evolution |
+| `eventType` | Stable event taxonomy name |
+| `eventTime` | Event creation time in UTC |
+| `sourceSystem` | Should be `mission-control` for v1 |
+| `sourceMode` | `wakanda` for the first gate |
+| `missionId` | Mission correlation identifier |
+| `taskId` | Optional task correlation identifier when the event is task-scoped |
+| `subject` | Business entity the event describes |
+| `payload` | Event-specific data body |
+
+### Delivery Policy
+
+- Mission Control sends events asynchronously after local execution/audit success.
+- Resonance ingestion success is indicated by an HTTP `2xx` response.
+- Mission Control must not wait for derived profile computation.
+- Mission Control may log or audit failed delivery attempts, but it must not fail the mission because Resonance is unavailable.
+- Retries must reuse the same `eventId`.
+
+### Timeout And Retry Defaults
+
+- Short request timeout
+- Bounded retry count
+- Exponential backoff
+- Safe drop-to-audit posture after retry exhaustion
+
+Exact numeric thresholds remain an implementation-time config decision, but the behavioral rule is fixed: best-effort, non-blocking, idempotent retry.
+
+### Authentication Boundary
+
+The contract assumes authenticated service-to-service delivery, but the exact mechanism is still open:
+
+- bearer token
+- signed shared secret header
+- mTLS
+
+Mission Control should not embed a provider-specific auth choice into source until the Resonance-side service definition exists.
+
+### Explicit v1 Non-Goals
+
+- No response-driven branching in Mission Control
+- No pull-back profile fetch in the same request cycle
+- No batch ingestion requirement
+- No guarantee that every internal event type is exported
+- No cross-mode export obligation beyond Wakanda in the first gate
+- No replacement of `MemoryService` or `AuditService`
 
 ## Decision Gate
 
@@ -83,6 +184,7 @@ Implementation remains blocked until the following minimum decision is written d
 
 - Resonance OS location:
 - Integration direction: push-only
+- Push contract: HTTP event ingestion v1
 - First surface:
 - Memory relationship:
 - Failure mode if Resonance OS is unavailable:
