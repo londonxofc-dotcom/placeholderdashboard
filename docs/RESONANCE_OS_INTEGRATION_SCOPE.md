@@ -20,6 +20,7 @@ Known references:
 
 - Resonance OS is important enough to be tracked as a future integration.
 - Working assumption: Resonance OS lives outside this repository as a separate GitHub-backed project.
+- Working decision: the first Mission Control integration direction is push-only.
 - Its shape is not defined in this repo.
 - It may affect the central data plane: memory, audit, orchestration signals, or decomposer context.
 - Incorrect assumptions here have high drift risk because this touches cross-mode memory and Mission Control's source of truth.
@@ -31,7 +32,7 @@ Before implementation, answer:
 1. What is Resonance OS: hosted service, local service, library, or conceptual layer exposed from a separate GitHub project?
 2. Where does it live operationally: another repo only, a deployed service from that repo, a local process from that repo, or some combination?
 3. What surface does it expose: API, events, files, memory store, queue, database, or UI?
-4. Integration direction: Mission Control pushes to Resonance OS, pulls from it, or both?
+4. What exact push contract is used first: HTTP API, queue/event bus, append-only file export, or another async event transport?
 5. Scope: one Resonance surface per mode, or one cross-mode layer above Batman/Jarvis/Wakanda?
 6. Memory relationship: does it replace, augment, or observe `MemoryService` and `AuditService`?
 
@@ -60,19 +61,28 @@ These are options only, not decisions:
 
 Once the unknowns are answered, start with the lowest-risk adapter boundary:
 
-- Define an append-only event contract if Resonance OS consumes Mission Control events.
+- Define an append-only event contract for Mission Control to push selected events outward to Resonance OS.
 - Keep it best-effort and non-blocking, like `AuditService` persistence.
 - Keep Mission Control's current `MemoryIsolationService` as the enforcement boundary unless Nick explicitly decides Resonance OS replaces memory storage.
 - Add tests before wiring any runtime call.
 
 If a concrete first product surface is needed, prefer the Wakanda-only advisory profiling shape in `docs/RESONANCE_WAKANDA_PROFILING_SPEC.md` before any cross-mode integration.
 
+### Current Working Direction
+
+The current preferred shape is:
+
+- Resonance OS is external to this repo and maintained as a separate GitHub-backed project.
+- Mission Control pushes append-only Wakanda events outward.
+- Mission Control does not pull runtime decisions, profiles, or task-routing instructions back from Resonance in the first gate.
+- Resonance failure must not block Batman, Jarvis, or Wakanda execution.
+
 ## Decision Gate
 
 Implementation remains blocked until the following minimum decision is written down:
 
 - Resonance OS location:
-- Integration direction:
+- Integration direction: push-only
 - First surface:
 - Memory relationship:
 - Failure mode if Resonance OS is unavailable:

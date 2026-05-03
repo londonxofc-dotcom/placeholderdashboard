@@ -202,6 +202,7 @@ If/when the Resonance OS gate is opened, the safest first product shape is:
 Meaning:
 
 - Mission Control emits selected Wakanda events
+- Mission Control pushes those events outward only; the first gate does not depend on pull-back profile retrieval
 - a profiling layer derives advisory resonance profiles from those events
 - no supervisor behavior changes
 - no approval bypass
@@ -255,7 +256,7 @@ If we want the narrowest low-risk starting point, the defaults should be:
 
 - **First product surface:** Wakanda-only advisory profile
 - **Input type:** label workflow events and campaign signals, not audio DSP
-- **Integration direction:** Mission Control pushes append-only events outward
+- **Integration direction:** Mission Control pushes append-only events outward, with no first-gate pull dependency
 - **Failure mode:** best-effort; Wakanda continues if Resonance is unavailable
 - **Memory relationship:** observe, do not replace `MemoryService` or `AuditService`
 
