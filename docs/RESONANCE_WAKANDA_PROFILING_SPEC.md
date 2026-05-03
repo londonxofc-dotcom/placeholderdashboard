@@ -204,6 +204,7 @@ Meaning:
 - Mission Control emits selected Wakanda events
 - Mission Control pushes those events outward only; the first gate does not depend on pull-back profile retrieval
 - Mission Control uses the `HTTP event ingestion v1` push contract defined in `docs/RESONANCE_OS_INTEGRATION_SCOPE.md`
+- Mission Control limits first-gate export scope to the taxonomy defined in `docs/RESONANCE_WAKANDA_EVENT_TAXONOMY_V1.md`
 - a profiling layer derives advisory resonance profiles from those events
 - no supervisor behavior changes
 - no approval bypass
@@ -257,6 +258,7 @@ If we want the narrowest low-risk starting point, the defaults should be:
 
 - **First product surface:** Wakanda-only advisory profile
 - **Input type:** label workflow events and campaign signals, not audio DSP
+- **First export set:** Wakanda event taxonomy v1
 - **Integration direction:** Mission Control pushes append-only events outward over HTTP event ingestion v1, with no first-gate pull dependency
 - **Failure mode:** best-effort; Wakanda continues if Resonance is unavailable
 - **Memory relationship:** observe, do not replace `MemoryService` or `AuditService`

@@ -15,6 +15,7 @@ Known references:
 - `HANDOFF-2026-04-25.md`: open architecture call — keep memory in `.claude/`, or migrate to Resonance OS as a service.
 - `WAKE_UP_REPORT.md`: explicitly says this needs a conversation, not code.
 - `RESONANCE_WAKANDA_PROFILING_SPEC.md`: candidate first product surface for label-facing resonance profiling.
+- `RESONANCE_WAKANDA_EVENT_TAXONOMY_V1.md`: first approved Wakanda event export set for Resonance.
 
 ## Known
 
@@ -178,6 +179,21 @@ Mission Control should not embed a provider-specific auth choice into source unt
 - No cross-mode export obligation beyond Wakanda in the first gate
 - No replacement of `MemoryService` or `AuditService`
 
+### First Export Surface
+
+The approved first export surface is defined in:
+
+`docs/RESONANCE_WAKANDA_EVENT_TAXONOMY_V1.md`
+
+The practical first slice is:
+
+- Wakanda task transition events
+- Wakanda release state events
+- Wakanda campaign state events
+- Wakanda readiness/outreach events
+
+This is intentionally narrower than full mode telemetry.
+
 ## Decision Gate
 
 Implementation remains blocked until the following minimum decision is written down:
@@ -185,7 +201,7 @@ Implementation remains blocked until the following minimum decision is written d
 - Resonance OS location:
 - Integration direction: push-only
 - Push contract: HTTP event ingestion v1
-- First surface:
+- First surface: Wakanda event taxonomy v1
 - Memory relationship:
 - Failure mode if Resonance OS is unavailable:
 
