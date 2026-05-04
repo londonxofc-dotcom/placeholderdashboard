@@ -1,5 +1,13 @@
 # Mission Control Operator Guide
 
+Before reading this guide as the whole system, read
+`docs/MISSION_CONTROL_CANONICAL_VISION.md`.
+
+The current repo implements the orchestration backbone of Mission Control OS.
+It should not be read as reducing the canonical system scope, which also
+includes Fractal Memory as the memory architecture and
+Oracle/Predictability as the reasoning layer.
+
 ## Current Status
 
 Mission Control OS currently supports three modes:
@@ -136,3 +144,11 @@ Runtime memory display endpoints read mission-scoped entries by `mission_id`.
 - Decide Resonance OS source/surface/memory relationship.
 - Add concrete ATS tool registry entries once real Wakanda workflow examples are available.
 - Decide whether the cockpit needs a multi-approver UI beyond the backend API support.
+
+## Canonical References
+
+- `docs/MISSION_CONTROL_CANONICAL_VISION.md`
+- `docs/MISSION_CONTROL_SYSTEM_LAYERS.md`
+- `docs/FRACTAL_MEMORY_ROLE_IN_MISSION_CONTROL.md`
+- `docs/ORACLE_PREDICTABILITY_ROLE_IN_MISSION_CONTROL.md`
+- `docs/MISSION_CONTROL_IMPLEMENTATION_STATE_AND_BOUNDARY.md`

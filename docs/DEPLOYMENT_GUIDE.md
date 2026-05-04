@@ -1,5 +1,13 @@
 # Mission Control Deployment Guide
 
+This guide covers launch and operationalization only.
+For canonical system framing, read `docs/MISSION_CONTROL_CANONICAL_VISION.md`.
+
+The current repo implements the orchestration backbone of Mission Control OS.
+It should not be read as reducing the canonical system scope, which also
+includes Fractal Memory as the memory architecture and
+Oracle/Predictability as the reasoning layer.
+
 ## Status
 
 This repo does not currently include production deployment config.

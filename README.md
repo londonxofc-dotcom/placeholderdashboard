@@ -10,6 +10,11 @@ Mission Control OS is an AI orchestration cockpit with three operating modes:
 
 The backend exposes a FastAPI API. The cockpit is a Next.js UI under `ui/`.
 
+The current repo implements the orchestration backbone of Mission Control OS.
+It should not be read as reducing the canonical system scope, which also
+includes Fractal Memory as the memory architecture and
+Oracle/Predictability as the reasoning layer.
+
 ## Current State
 
 - Phase 0-3 are complete.
@@ -18,6 +23,8 @@ The backend exposes a FastAPI API. The cockpit is a Next.js UI under `ui/`.
 - Resonance OS integration is scoped but intentionally not implemented until its source/surface/memory relationship is decided.
 
 See [MASTER-BUILD-PLAN.md](MASTER-BUILD-PLAN.md) for the live phase tracker.
+For the canonical system framing, start with
+[Mission Control Canonical Vision](docs/MISSION_CONTROL_CANONICAL_VISION.md).
 
 ## Quick Start
 
@@ -145,6 +152,11 @@ Task result memory writes route through `MemoryIsolationService` for `ExecutorAg
 
 ## Important Docs
 
+- [Mission Control Canonical Vision](docs/MISSION_CONTROL_CANONICAL_VISION.md)
+- [Mission Control System Layers](docs/MISSION_CONTROL_SYSTEM_LAYERS.md)
+- [Fractal Memory Role In Mission Control](docs/FRACTAL_MEMORY_ROLE_IN_MISSION_CONTROL.md)
+- [Oracle Predictability Role In Mission Control](docs/ORACLE_PREDICTABILITY_ROLE_IN_MISSION_CONTROL.md)
+- [Mission Control Implementation State And Boundary](docs/MISSION_CONTROL_IMPLEMENTATION_STATE_AND_BOUNDARY.md)
 - [Operator Guide](docs/OPERATOR_GUIDE.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
 - [Deployment Decision Record](docs/DEPLOYMENT_DECISION_RECORD.md)

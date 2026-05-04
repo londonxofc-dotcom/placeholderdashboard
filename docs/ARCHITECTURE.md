@@ -1,5 +1,13 @@
 # Mission Control OS — Architecture & Design Principles
 
+This document is an implementation-oriented architecture snapshot.
+For canonical doctrine, read `docs/MISSION_CONTROL_CANONICAL_VISION.md` first.
+
+The current repo implements the orchestration backbone of Mission Control OS.
+It should not be read as reducing the canonical system scope, which also
+includes Fractal Memory as the memory architecture and
+Oracle/Predictability as the reasoning layer.
+
 **Status:** Phase 0 Complete → Phase 1 (Batman Mode MVP) Ready
 
 **Purpose:** Bridge Grok research (17-section design) with Phase 1 spec (implementation roadmap).
@@ -76,3 +84,11 @@ Mission Architect Agent (Cursor 3) orchestrates Phase 1:
 
 **First command to Agent:**
 > Start Phase 1. Create folder structure, pyproject.toml, FastAPI skeleton, LangGraph Batman Lead agent. Align with ARCHITECTURE.md + SPEC_PHASE1_BATMAN_MVP.md.
+
+## Canonical References
+
+- `docs/MISSION_CONTROL_CANONICAL_VISION.md`
+- `docs/MISSION_CONTROL_SYSTEM_LAYERS.md`
+- `docs/FRACTAL_MEMORY_ROLE_IN_MISSION_CONTROL.md`
+- `docs/ORACLE_PREDICTABILITY_ROLE_IN_MISSION_CONTROL.md`
+- `docs/MISSION_CONTROL_IMPLEMENTATION_STATE_AND_BOUNDARY.md`

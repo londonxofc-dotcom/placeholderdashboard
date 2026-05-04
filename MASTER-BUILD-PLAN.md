@@ -6,6 +6,7 @@
 **Blockers:** Production deployment target decisions; external Resonance repo/service implementation and verification evidence needed before implementation
 **Next Approval Gate:** Phase 5 deployment decision record completion, or Resonance OS event-emission implementation gate
 **Session State:** see `current.md` (16D shell — read on session open)
+**Canonical Doctrine:** `docs/MISSION_CONTROL_CANONICAL_VISION.md`, `docs/MISSION_CONTROL_SYSTEM_LAYERS.md`, `docs/FRACTAL_MEMORY_ROLE_IN_MISSION_CONTROL.md`, `docs/ORACLE_PREDICTABILITY_ROLE_IN_MISSION_CONTROL.md`, `docs/MISSION_CONTROL_IMPLEMENTATION_STATE_AND_BOUNDARY.md`
 
 ### Mode → Business Mapping (CONFIRMED 2026-04-24)
 - **Batman** = Vampire Sex / London X — artist work, approval-gated
@@ -123,6 +124,7 @@
 - [x] Wakanda resonance event taxonomy v1 defined for the first export surface — `docs/RESONANCE_WAKANDA_EVENT_TAXONOMY_V1.md`
 - [x] Resonance-side ingestion service spec defined — `docs/RESONANCE_OS_INGESTION_SERVICE_SPEC.md`
 - [x] Resonance-side ingestion verification spec defined — `docs/RESONANCE_OS_INGESTION_VERIFICATION_SPEC.md`
+- [x] Canonical Mission Control doctrine docs restored — vision, layers, Fractal Memory role, Oracle role, and implementation boundary docs
 
 ---
 
