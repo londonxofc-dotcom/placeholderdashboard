@@ -93,7 +93,7 @@ Gate F defines the audit contract for every forecast. It is locked and its funct
 - No forecast result may be surfaced to any consumer (UI, API, log, downstream service) without an audit record.
 - The audit record must include: which stages executed, in what order, what orchestration gate id was used, and what composition method was applied.
 - Fixtures used during gate development had `stagesExecuted: []`, `orchestrationGateId: undefined`, and `compositionMethod: undefined`. Runtime integration must populate all three fields — empty is not valid in runtime context.
-- Gate F's `logForecastAuditEntry` and `validateForecastAuditEntry` functions are the gate interface. Runtime wiring must call these.
+- Gate F's `createForecastAuditEntry` and `validateForecastAuditEntry` functions are the gate interface. Runtime wiring must call these.
 
 **What runtime integration must not do to Gate F:**
 - Must not bypass audit logging to increase speed.
@@ -196,7 +196,7 @@ During runtime integration implementation (when authorized), the following touch
 | `predictability-kernel.ts` | Call `calculatePredictabilityForecast` only — no modification |
 | `adapter-integration.ts` | Call `adapterPacketToPredictability` and `predictabilityForecastToAdapterExplanation` only — no modification |
 | `adapter-validation.ts` | Call `validateThenAdaptPacket` only — no modification |
-| Gate F audit functions | Call `logForecastAuditEntry` and `validateForecastAuditEntry` — no modification |
+| Gate F audit functions | Call `createForecastAuditEntry` and `validateForecastAuditEntry` — no modification |
 | New runtime wiring file (if created) | New file only — must not import or re-export locked gate internals beyond the defined call interfaces |
 | New integration tests | Test the wired pipeline end-to-end against locked contracts |
 
@@ -263,7 +263,7 @@ KernelNativePredictabilityInput
 PredictabilityForecast
   → predictabilityForecastToAdapterExplanation()
     → Adapter explanation output
-      → Gate F: logForecastAuditEntry()
+      → Gate F: createForecastAuditEntry()
         → Audit record written
 ```
 
@@ -285,7 +285,7 @@ These rules apply unconditionally during runtime execution:
 | Missing supplemented fields = bridge failure | Do not patch missing fields in the runtime layer — fail and surface the gap |
 | Invalid or empty required arrays = bridge failure | No defaulting of required arrays to empty in runtime context |
 | Out-of-range confidence values = bridge failure | Clamp logic belongs in the bridge contract, not the runtime layer |
-| Audit log write failure = execution failure | If `logForecastAuditEntry` fails, the forecast result must not be surfaced |
+| Audit log write failure = execution failure | If `createForecastAuditEntry` fails, the forecast result must not be surfaced |
 | No partial pipeline execution | All eight steps must complete or none complete — no mid-pipeline results |
 | No silent error swallowing | All failures must be surfaced, logged, and traceable |
 | Quarantine constraint enforced | If any evidence item is in quarantine, the Markov stage (`M-F`) must enforce the quarantine constraint before stage output flows downstream |
@@ -303,7 +303,7 @@ Before any runtime wiring implementation may begin, all of the following must be
 - [ ] Full test suite passes at HEAD (currently 1273 / 44 files).
 - [ ] Typecheck passes clean at HEAD (currently confirmed post-G-3).
 - [ ] Supplemented field sources are identified: `targetDate`, `domain`, `horizon`, `trendWindows`, `landmarkEvents`, `behavioralPatterns`, `cycleWindows` — runtime context must have a defined source for each of these before wiring begins.
-- [ ] Gate F `logForecastAuditEntry` integration point is confirmed available in runtime context.
+- [ ] Gate F `createForecastAuditEntry` integration point is confirmed available in runtime context.
 - [ ] No new type errors introduced in the wiring file (narrow typecheck pass required before full suite).
 
 If any precondition is not met, wiring must not begin.
@@ -363,7 +363,7 @@ The pre-existing typecheck backlog (errors in `decay-scheduler`, `shell-graduati
 | Bridge returns `'failed'` | Critical field mapping failed | Do not call kernel. Throw or return a typed failure. |
 | Bridge version mismatch | Runtime bridge contract version ≠ expected | Hard failure. Do not attempt mapping. |
 | Kernel throws | `calculatePredictabilityForecast` throws for any reason | Catch, do not surface partial result, write a failure audit record, re-throw or return typed failure. |
-| Audit write fails | `logForecastAuditEntry` throws or returns error | Do not surface forecast result. Surface audit failure to caller. |
+| Audit write fails | `createForecastAuditEntry` throws or returns error | Do not surface forecast result. Surface audit failure to caller. |
 | Evidence in quarantine bypasses M-F constraint | Quarantine constraint not applied | Test gate catches this; runtime wiring must not disable the test or the constraint. |
 | Supplemented field not available at runtime | `targetDate`, `domain`, etc. not present in context | Bridge fails closed. Surface which fields are missing. |
 
