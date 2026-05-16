@@ -108,6 +108,8 @@ approved runtime invocation boundary
 
 RI-5 must preserve the current fail-closed contract. If required input cannot be supplied without violating a locked boundary, the invocation boundary must stop before calling the pipeline.
 
+Before any RI-5 implementation begins, the exact file that owns the RI-5 invocation boundary must be named explicitly in the implementation packet.
+
 ## 8. Allowed Touchpoints
 
 Allowed touchpoints to evaluate for RI-5 implementation, not implement in this proposal:
@@ -129,6 +131,8 @@ Allowed actions under a future RI-5 implementation packet may include:
 - add tests proving the invocation boundary does not default, infer, or generate supplemented fields
 
 No allowed touchpoint implies permission to edit locked files.
+
+Naming a touchpoint in this proposal does not authorize editing that file unless a later packet explicitly permits that edit.
 
 ## 9. Forbidden Touchpoints
 
@@ -177,6 +181,8 @@ Any RI-5 invocation boundary must require a complete `RuntimePipelineInput`:
 The invocation boundary must not default, infer, or generate missing input.
 
 If any required field is absent, unavailable, empty, or outside the expected shape, RI-5 must stop before invocation or produce the existing fail-closed result behavior through the pipeline contract.
+
+Before implementation, missing-input behavior must be resolved explicitly: either the invocation boundary stops before calling the pipeline, or it calls the pipeline and returns `bridge_failed`.
 
 ## 11. Required Outputs
 
@@ -291,6 +297,8 @@ Before RI-5 implementation, answer:
 5. Is audit persistence still deferred after RI-5, or does a later stage own it?
 6. Which tests define "RI-5 complete" without crossing into RI-6 handoff or live deployment?
 
+No RI-5 implementation is authorized until those answers are resolved in a packet that names the exact owner file and the selected missing-input behavior.
+
 ## 19. Acceptance Criteria
 
 This RI-5 scope proposal is accepted when:
@@ -319,3 +327,5 @@ Review this RI-5 scope proposal.
 If accepted, commit and push this document with a separate docs-only authorization.
 
 Do not start RI-5 implementation until a separate implementation packet names exact allowed files, exact touchpoints, tests to add, and verification commands.
+
+Any future RI-5 implementation packet must also name the exact files not to edit, the exact tests to run, and the exact verification commands required before completion.
